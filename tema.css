@@ -174,8 +174,8 @@ body.g .seg button[aria-pressed=true] { background: var(--nero); color: #fff; }
 .mod-card .freccia { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--nero); background: transparent; color: var(--nero); display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .mod-card .freccia:hover { background: var(--nero); color: #fff; }
 .dati { display: flex; gap: 22px; flex-wrap: wrap; }
-.dato strong { display: block; font-size: 15px; font-weight: 600; }
-.dato span { display: block; font-size: 11px; color: rgba(18, 18, 18, .6); text-transform: uppercase; letter-spacing: .03em; border-top: 1.5px solid var(--nero); padding-top: 3px; margin-top: 3px; }
+.dati > .dato strong { display: block; font-size: 15px; font-weight: 600; }
+.dati > .dato span { display: block; font-size: 11px; color: rgba(18, 18, 18, .6); text-transform: uppercase; letter-spacing: .03em; border-top: 1.5px solid var(--nero); padding-top: 3px; margin-top: 3px; }
 .mod-card .dato:first-child strong { font-size: 30px; font-weight: 500; letter-spacing: -.03em; line-height: 1.05; }
 .mod-card footer { margin-top: auto; display: flex; gap: 6px; flex-wrap: wrap; }
 .grafico { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; align-items: end; flex: 1; min-height: 130px; margin-top: 6px; }
@@ -450,3 +450,142 @@ dialog.quota .grid { margin-top: 4px; }
 .pf-lista .pill, .pf-lista .pill-tipo, .pf-lista .pill-mod { font-size: 11px; padding: 2px 8px; }
 .pf-lista .pannello { overflow-x: hidden; }
 /* salvadanaio già specchiato nell immagine (muso verso l interno della card, simbolo € / $ dritto) */
+
+/* ===================================================================================================
+   v3.4 — pagine su un solo schermo, etichette nere, spunte di completamento, niente "scatti"
+   =================================================================================================== */
+/* lo spazio della barra di scorrimento è sempre riservato: passando da una pagina corta a una lunga
+   il contenuto non si sposta più di lato */
+html { scrollbar-gutter: stable; }
+.view { padding-bottom: 20px; gap: 16px; }
+
+/* etichette tratteggiate e titoletti in nero */
+body.g .box-sub[data-label]::before, body.g .item[data-label]::before,
+body.g #incarico > .body > .box-sub[data-label]::before, body.g #visita > .body > .box-sub[data-label]::before,
+.tag-trat { color: var(--nero); border-color: var(--nero); }
+body.g .section .sub-title { color: var(--nero); font-size: 12.5px; }
+.sidenav-titolo { border-bottom-color: var(--nero); }
+
+/* pratica più compatta */
+body.g .section > header { padding-bottom: 10px; }
+body.g .section > header h2 { font-size: 32px; }
+body.g .section > header p { margin-top: 2px; }
+body.g .section .body, body.g #incarico > .body, body.g #visita > .body { gap: 14px; align-items: stretch; }
+body.g .box-sub, body.g .item,
+body.g #incarico > .body > .box-sub[data-label], body.g #visita > .body > .box-sub[data-label] { padding: 16px 18px 18px; }
+body.g .box-sub[data-label]::before, body.g .item[data-label]::before { margin-bottom: 10px; }
+body.g .sec-nav { display: none !important; }
+/* una sola scheda (un generatore, un infisso…): occupa tutta la larghezza, così è più bassa */
+body.g .items > .item:only-of-type, body.g .items > .item:first-child:nth-last-child(2) { grid-column: 1 / -1; }
+
+/* spunte nel menu della pratica */
+body.g .sidenav a { display: flex; align-items: center; gap: 9px; }
+body.g .sidenav .spunta { --spunta-ink: #fff; display: inline-flex; width: 18px; height: 18px; flex: none; color: var(--nero); }
+body.g .sidenav .spunta:empty { display: none; }
+body.g .sidenav a.active .spunta { color: #fff; --spunta-ink: var(--nero); }
+body.g .sidenav .nav-label { flex: 1; min-width: 0; }
+
+/* Documenti e allegati: elenco P/NP a sinistra, allegati e dati del portale a destra */
+body.g #documenti > .body { grid-template-columns: 1fr; }
+.doc-colonne { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 1400px) { .doc-colonne { grid-template-columns: 1fr; } }
+.doc-testa { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: -4px 0 10px; }
+.doc-testa .add-row { display: flex; gap: 6px; margin: 0; }
+body.g .doc-rows { border: 0; border-radius: 0; gap: 4px; overflow: visible; }
+body.g .doc-row { grid-template-columns: 24px minmax(0, 1fr) auto; gap: 4px 10px; padding: 6px 6px 6px 12px; border: 0; border-radius: 12px; background: var(--crema); }
+body.g .doc-row:nth-child(even) { background: var(--crema); }
+body.g .doc-row .n { font-size: 12px; color: var(--muted); }
+body.g .doc-row .t { font-size: 13px; line-height: 1.35; }
+.doc-scelta { display: flex; align-items: center; gap: 4px; }
+body.g .doc-scelta .seg { background: var(--sabbia); }
+body.g .doc-scelta .seg button { height: 28px; padding: 0 11px; font-size: 12px; }
+body.g .doc-row .matita { width: 30px; height: 30px; padding: 0; color: #A39C90; }
+body.g .doc-row .matita.attiva { color: var(--nero); }
+body.g .doc-row .note { grid-column: 2 / 4; }
+body.g .doc-row .note input { height: 34px; min-height: 34px; font-size: 13px; background: #FFFDF8; }
+body.g #documenti .fvg-gruppo + .fvg-gruppo { margin-top: 14px; }
+body.g #documenti .fvg-gruppo-head { display: flex; flex-direction: column; gap: 1px; margin-bottom: 8px; }
+body.g #documenti .fvg-gruppo-head strong { font-size: 13.5px; }
+body.g #documenti .fvg-gruppo-head span { font-size: 12px; color: var(--muted); }
+body.g .fvg-rows { gap: 4px; }
+body.g .fvg-row { grid-template-columns: 22px minmax(0, 1fr) auto auto; gap: 8px; padding: 6px 6px 6px 12px; border: 0; border-radius: 12px; background: var(--crema); }
+body.g .fvg-row .n { font-size: 12px; }
+body.g .fvg-row .t { font-weight: 400; min-width: 0; }
+body.g .fvg-row .t strong { display: block; font-size: 13px; font-weight: 600; }
+body.g .fvg-row .t small { display: block; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.g .fvg-row .tools { gap: 2px; }
+body.g .fvg-row.dato .valore input { height: 30px; min-height: 30px; }
+
+/* Home: tutto in uno schermo; gli elenchi in basso occupano lo spazio che resta e scorrono al loro interno */
+@media (min-width: 1251px) and (min-height: 700px) {
+  body.g.vista-home #viewHome { height: calc(100vh - 20px); padding-bottom: 16px; box-sizing: border-box; overflow: hidden; }
+  body.g.vista-home .home-colonne { flex: 1; min-height: 0; align-items: stretch; }
+  body.g.vista-home .home-colonne > .pannello { display: flex; flex-direction: column; min-height: 0; }
+  body.g.vista-home .home-colonne .lista-card { flex: 1; min-height: 0; overflow: auto; }
+}
+.saluto h1 { font-size: 40px; }
+.saluto p { margin-top: 6px; }
+.saluto .btn { margin-top: 12px; }
+.home-griglia, .mod-cards, .home-colonne { gap: 14px; }
+.mod-card, .card-incassi { min-height: 172px; padding: 16px 20px; }
+.pannello > header { padding-top: 14px; }
+
+/* Opzioni su due colonne */
+@media (min-width: 1300px) {
+  .view-opzioni { max-width: none; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); align-items: start; }
+  .view-opzioni > * { grid-column: 1; }
+  .view-opzioni > .pannello.opz:nth-of-type(2) { grid-column: 2; grid-row: 1 / span 3; }
+}
+/* Documenti: righe più basse e colonna dell'elenco più larga, così i testi vanno a capo meno */
+.doc-colonne { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+body.g .doc-rows { gap: 3px; }
+body.g .doc-row { padding: 3px 4px 3px 12px; min-height: 36px; }
+body.g .doc-row .t { font-size: 12.5px; line-height: 1.3; }
+body.g .doc-scelta .seg { padding: 2px; }
+body.g .doc-scelta .seg button { height: 26px; }
+body.g .doc-row .matita { width: 28px; height: 28px; }
+body.g #documenti .fvg-gruppo-head { border-bottom: 0; padding-bottom: 0; }
+body.g #documenti .fvg-gruppo-head strong { color: var(--nero); }
+body.g .fvg-row { padding: 4px 4px 4px 12px; }
+/* Incarico: lettera e compenso affiancati sugli schermi larghi */
+@media (min-width: 1500px) {
+  body.g #incarico > .body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  body.g #incarico > .body > * { grid-column: auto; }
+}
+@media (min-width: 1500px) {
+  body.g #incarico > .body { align-items: start; }
+  body.g #incarico > .body > .box-sub:first-child { grid-column: 1; grid-row: 1; }
+  body.g #incarico > .body > .box-totale { grid-column: 1; grid-row: 2; }
+  body.g #incarico > .body > .box-sub:nth-child(2) { grid-column: 2; grid-row: 1 / span 2; }
+}
+body.g .box-totale .add-row.fine { border-top: 0; padding-top: 4px; }
+body.g .box-totale .pf-totali, body.g .box-totale > .grid:first-of-type { border-top: 0; margin-top: -6px; padding-top: 0; }
+body.g #incarico textarea { min-height: 52px; }
+body.g .box-totale > .nota-campo { font-size: 11.5px; }
+/* totali in una sola riga: quattro importi piccoli e il totale da pagare più largo */
+body.g .box-totale .pf-totali > .f.s3 { grid-column: span 2; }
+body.g .box-totale .pf-totali > .f.s12 { grid-column: span 4; }
+body.g .box-totale .pf-totali > .f > label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.g #incarico .box-sub:first-child textarea { height: 48px; min-height: 48px; }
+/* Riscaldamento: i codici in una riga sola, sopra i generatori */
+body.g #impianti > .body > .box-sub:first-child { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 18px; padding-top: 12px; padding-bottom: 14px; }
+body.g #impianti > .body > .box-sub:first-child::before { margin: 0; align-self: center; }
+body.g #impianti > .body > .box-sub:first-child > .grid { flex: 1; }
+/* niente scatti: il menu della pratica resta sempre alla stessa altezza (prima scendeva di 10 px nelle pagine lunghe)
+   e il riquadro "Foto immobile" accanto al titolo non sposta il titolo */
+body.g .sidenav { top: 90px; }
+body.g .section > header { position: relative; min-height: 40px; }
+body.g .section > header > .foto-immobile { position: absolute; right: 0; top: -6px; }
+/* Pratiche edilizie: nota tecnica e offerta su due colonne sugli schermi larghi */
+@media (min-width: 1500px) {
+  body.g #nota > .body, body.g #offerta > .body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  body.g #nota > .body > *, body.g #offerta > .body > * { grid-column: auto; }
+  body.g #nota > .body > :nth-child(1) { grid-column: 1; grid-row: 1; }
+  body.g #nota > .body > :nth-child(2) { grid-column: 2; grid-row: 1 / span 2; }
+  body.g #nota > .body > :nth-child(3) { grid-column: 1; grid-row: 2; }
+  body.g #nota > .body > :nth-child(2) textarea:last-of-type { min-height: 430px; }
+  body.g #offerta > .body > :nth-child(1) { grid-column: 1; grid-row: 1; }
+  body.g #offerta > .body > :nth-child(2) { grid-column: 2; grid-row: 1; }
+  body.g #offerta > .body > :nth-child(3) { grid-column: 1; grid-row: 2; }
+  body.g #offerta > .body > :nth-child(4) { grid-column: 2; grid-row: 2; }
+}

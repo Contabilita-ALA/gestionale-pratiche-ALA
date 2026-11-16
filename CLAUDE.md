@@ -37,5 +37,13 @@ servendo la cartella con `python3 -m http.server`.
 Gli elenchi di pratiche e registro restano in memoria (`ricorda` in `web/archivio.js`): si mostrano subito e, se hanno più
 di 30 s, si rileggono dietro le quinte; se cambiano parte l'evento `archivio-aggiornato` e `app.js` ridisegna la schermata.
 
+## Interfaccia (v3.4)
+- Obiettivo: ogni pagina su un solo schermo (prove a 1904×912). Home: gli elenchi in basso scorrono al loro interno.
+- Pratica: niente pulsanti "sezione precedente/successiva"; nel menu a sinistra un indicatore di completamento per sezione
+  (`completamento`/`spunta` in `app.js`: cerchio tratteggiato, anello parziale, spunta nera).
+- `html { scrollbar-gutter: stable }` e menu sticky a `top: 90px`: niente spostamenti passando da una pagina all'altra.
+- Documento di sopralluogo: in Stampa si sceglie la grafica "Classica" o "Nuova (prova)" (`opzioni.stile = 'nuovo'`,
+  `cssNuovo()` in `lib/template.js`, font Figtree): cambia solo l'aspetto, le misure delle righe restano uguali.
+
 ## Versione
-Etichetta in basso a sinistra in `index.html` (`v3.3 web`): aggiornarla a ogni modifica.
+Etichetta in basso a sinistra in `index.html` (`v3.4 web`): aggiornarla a ogni modifica.

@@ -216,6 +216,7 @@ function updateStatus() {
 let saveTimer;
 function save() {
   aggiornaRiepilogoProforma();
+  aggiornaSpunte();
   if (!pratica.dirty) setPratica({ dirty: true });
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => scriviBozza(state), 300);
@@ -304,16 +305,16 @@ const fields = {
     { k: 'anno', l: 'Anno installazione', t: 'number', s: 3 },
     { k: 'catasto', l: 'Codice catasto', s: 3, upper: true },
     { k: 'impianto', l: 'Impianto', t: 'single', s: 6, o: [['autonomo', 'Autonomo'], ['centralizzato', 'Centralizzato']] },
-    { k: 'generatore', l: 'Tipologia generatore', t: 'single', s: 12, o: [['standard', 'Caldaia standard'], ['condensazione', 'Caldaia a condensazione'], ['ibrido', 'Ibrido'], ['biomassa', 'Biomassa']] },
-    { k: 'ubicazione', l: 'Ubicazione', t: 'single', s: 12, o: [['interno', 'Interno'], ['esterno', 'Esterno'], ['centrale', 'Centrale termica']] },
+    { k: 'generatore', l: 'Tipologia generatore', t: 'single', s: 7, o: [['standard', 'Caldaia standard'], ['condensazione', 'Caldaia a condensazione'], ['ibrido', 'Ibrido'], ['biomassa', 'Biomassa']] },
+    { k: 'ubicazione', l: 'Ubicazione', t: 'single', s: 5, o: [['interno', 'Interno'], ['esterno', 'Esterno'], ['centrale', 'Centrale termica']] },
     { k: 'marca', l: 'Marca', s: 6 },
     { k: 'modello', l: 'Modello', s: 6 },
     { k: 'potNom', l: 'Potenza nominale', u: 'kW', t: 'number', s: 3, half: true },
     { k: 'potInt', l: 'Potenza carico intermedio/minimo', u: 'kW', t: 'number', s: 3, half: true },
     { k: 'rend100', l: 'Rendimento al 100%', u: '%', t: 'number', s: 3, half: true },
     { k: 'rendInt', l: 'Rendimento carico interm./min.', u: '%', t: 'number', s: 3, half: true },
-    { k: 'regolazione', l: 'Regolazione', t: 'multi', s: 12, altro: 'regolazioneAltro', o: [['caldaia', 'Solo in caldaia'], ['sonda', 'Sonda climatica esterna'], ['zona', 'Termostato di zona'], ['ambiente', 'Termostato per ambiente'], ['valvole', 'Valvole termostatiche'], [ALTRO, 'Altro']] },
-    { k: 'terminali', l: 'Terminali', t: 'multi', s: 12, altro: 'terminaliAltro', o: [['termoconvettori', 'Termoconvettori'], ['radiatori', 'Radiatori'], ['pavimento', 'Radiante a pavimento'], ['fancoil', 'Fancoil'], [ALTRO, 'Altro']] },
+    { k: 'regolazione', l: 'Regolazione', t: 'multi', s: 7, altro: 'regolazioneAltro', o: [['caldaia', 'Solo in caldaia'], ['sonda', 'Sonda climatica esterna'], ['zona', 'Termostato di zona'], ['ambiente', 'Termostato per ambiente'], ['valvole', 'Valvole termostatiche'], [ALTRO, 'Altro']] },
+    { k: 'terminali', l: 'Terminali', t: 'multi', s: 5, altro: 'terminaliAltro', o: [['termoconvettori', 'Termoconvettori'], ['radiatori', 'Radiatori'], ['pavimento', 'Radiante a pavimento'], ['fancoil', 'Fancoil'], [ALTRO, 'Altro']] },
     { k: 'distribuzione', l: 'Tipo distribuzione', t: 'single', s: 6, altro: 'distribuzioneAltro', o: [['monotubo', 'Monotubo'], ['collettore', 'A collettore'], [ALTRO, 'Altro']] },
     { k: 'acs', l: 'Impianto ACS', t: 'single', s: 6, o: [['combinato', 'Combinato'], ['non_combinato', 'Non combinato']] },
   ],
@@ -554,7 +555,11 @@ let sezioneAttiva = 'committente';
 // vista aperta (Home, elenco di un modulo, pratica, proforma, opzioni): vedi più sotto
 
 
-function navigazioneSezione(id) {
+// (i pulsanti "← precedente / successiva →" in fondo alle sezioni sono stati tolti: si usa il menu a sinistra)
+function navigazioneSezione() {
+  return null;
+}
+function _navigazioneSezioneVecchia(id) {
   const ids = idSezioni();
   const i = ids.indexOf(id);
   if (i < 0) return null;
@@ -787,11 +792,19 @@ function datoFvg([k, titolo], i) {
 function sezioneDocumenti() {
   const rows = DOCUMENTI.map((txt, i) => {
     const d = (state.documenti[i] ||= { stato: '', note: '' });
+    // la nota si apre solo quando serve (pulsante a matita), così l'elenco resta compatto
+    const nota = h('div', { class: 'note', hidden: !d.note },
+      h('input', { type: 'text', placeholder: 'Note ed osservazioni', value: d.note || '', 'aria-label': `Note documento ${i + 1}`, oninput: (e) => { d.note = e.target.value; save(); } }));
+    const matita = h('button', {
+      type: 'button', class: `btn small ghost matita${d.note ? ' attiva' : ''}`, title: 'Note ed osservazioni', 'aria-label': `Note documento ${i + 1}`,
+      html: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
+      onclick: () => { nota.hidden = !nota.hidden; if (!nota.hidden) nota.querySelector('input').focus(); },
+    });
     return h('div', { class: 'doc-row' },
       h('span', { class: 'n' }, String(i + 1).padStart(2, '0')),
       h('span', { class: 't', html: txt }),
-      seg([['P', 'P'], ['NP', 'NP']], d.stato, (val) => { d.stato = val; save(); }),
-      h('div', { class: 'note' }, h('input', { type: 'text', placeholder: 'Note ed osservazioni', value: d.note || '', oninput: (e) => { d.note = e.target.value; save(); } })));
+      h('span', { class: 'doc-scelta' }, matita, seg([['P', 'P'], ['NP', 'NP']], d.stato, (val) => { d.stato = val; save(); })),
+      nota);
   });
   // Allegati per il portale FVGEnergia: controllo di cosa c'è e caricamento dei file (cartella o zip dalla barra in alto)
   const allegato = (st, i) => {
@@ -839,19 +852,23 @@ function sezioneDocumenti() {
         giaCaricato ? h('button', { type: 'button', class: 'btn small ghost danger', onclick: rimuovi }, 'Rimuovi') : null,
         (input = h('input', { type: 'file', accept: st.immagine ? 'image/*,.heic,.heif' : st.k === 'sopralluogo' ? 'application/pdf,.pdf' : 'application/pdf,.pdf,image/*', hidden: true, onchange: (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) carica(f); } }))));
   };
-  return section('documenti', 'Documenti e allegati', '#9aa3aa', 'P: presente · NP: non presente',
-    h('div', { class: 'add-row' },
-      h('button', { type: 'button', class: 'btn small', onclick: () => { state.documenti.forEach((d) => (d.stato = 'NP')); rerender(); } }, 'Imposta tutti NP'),
-      h('button', { type: 'button', class: 'btn small ghost', onclick: () => { state.documenti.forEach((d) => (d.stato = '')); rerender(); } }, 'Azzera')),
-    h('div', { class: 'doc-rows' }, rows),
-    h('p', { class: 'sub-title' }, 'Portale FVGEnergia'),
-    boxPdf('Portale FVG', '#ED7D31',
+  // due colonne: a sinistra l'elenco dei documenti (P / NP), a destra gli allegati e i dati del portale FVGEnergia
+  return section('documenti', 'Documenti e allegati', '#9aa3aa', null,
+    h('div', { class: 'doc-colonne' },
+    boxPdf('Documenti', null,
+      h('div', { class: 'doc-testa' },
+        h('span', { class: 'nota-campo' }, 'P: presente · NP: non presente'),
+        h('div', { class: 'add-row' },
+          h('button', { type: 'button', class: 'btn small', onclick: () => { state.documenti.forEach((d) => (d.stato = 'NP')); rerender(); } }, 'Imposta tutti NP'),
+          h('button', { type: 'button', class: 'btn small ghost', onclick: () => { state.documenti.forEach((d) => (d.stato = '')); rerender(); } }, 'Azzera'))),
+      h('div', { class: 'doc-rows' }, rows)),
+    boxPdf('Portale FVGEnergia', '#ED7D31',
       h('div', { class: 'fvg-gruppo' },
         h('div', { class: 'fvg-gruppo-head' }, h('strong', {}, 'Allegati'), h('span', {}, 'nella cartella "ALLEGATI FVG RIF. COGNOME" della APE, rinominati: "1. Scheda catastale rif. COGNOME.pdf"…')),
         h('div', { class: 'fvg-rows' }, statoAllegati(state).map(allegato))),
       h('div', { class: 'fvg-gruppo' },
         h('div', { class: 'fvg-gruppo-head' }, h('strong', {}, 'Dati da inserire nel portale'), h('span', {}, 'dai codici della scheda Riscaldamento; non sono file da allegare')),
-        h('div', { class: 'fvg-rows' }, DATI_FVG.map(datoFvg)))));
+        h('div', { class: 'fvg-rows' }, DATI_FVG.map(datoFvg))))));
 }
 
 function sezioneCommittente() {
@@ -1590,7 +1607,7 @@ function boxRicevuta() {
       h('strong', {}, f ? f.nome : 'Ricevuta di avvenuta denuncia di variazione'),
       h('span', {}, f
         ? 'Protocollo, data e motivazione letti dalla ricevuta (controllali qui sotto).'
-        : "Carica il PDF della ricevuta dell'Agenzia delle Entrate: protocollo (es. VE0228152), data e motivo della variazione vengono inseriti da soli; foglio, mappale e sub solo se mancano nella scheda Immobile.")),
+        : "PDF dell'Agenzia delle Entrate: protocollo, data e motivo si compilano da soli (foglio, mappale e sub solo se mancano).")),
     h('div', { class: 'add-row' },
       f ? h('button', { type: 'button', class: 'btn ghost', onclick: () => apriFile(f) }, 'Apri') : null,
       h('button', { type: 'button', class: 'btn', onclick: () => input.click() }, f ? 'Sostituisci' : 'Carica ricevuta'),
@@ -1618,11 +1635,17 @@ function boxCompenso() {
     h('div', { class: 'grid' }, campoFisso('pfImmobile', "Immobile (dalla scheda Immobile: va nella lettera e nel proforma)", riepilogoImmobile, { s: 12 })),
     h('div', { class: 'prests' }, righePrestazioni()),
     h('div', { class: 'add-row' }, h('button', { type: 'button', class: 'btn small', onclick: () => { p.righe.push({ tipo: 'res', qt: '1', prezzo: '', sub: '' }); rerender(); } }, '+ Aggiungi prestazione (altra unità)')),
-    speseNonImponibili(),
+    speseNonImponibili());
+}
+// Totale del compenso e creazione del proforma (box a parte, sotto la lettera sugli schermi larghi)
+function boxTotale() {
+  // le spiegazioni compaiono passando il mouse sopra (title), così il riquadro resta basso
+  const pulsante = pulsanteProforma();
+  pulsante.title = 'Il proforma prende destinatario, prestazioni e spese da questa pratica e il primo numero libero del registro.';
+  return h('div', { class: 'box-sub box-pdf box-totale', 'data-label': 'Totale', title: 'La marca da bollo (2,00 €) si aggiunge da sola quando prestazioni + 4% INARCASSA superano 77,47 € (le spese non imponibili non contano).' },
     campiCompenso('inc'),
-    h('p', { class: 'nota-campo' }, 'La marca da bollo (2,00 €) si aggiunge da sola quando prestazioni + 4% INARCASSA superano 77,47 € (le spese non imponibili non contano).'),
-    h('div', { class: 'add-row fine' }, pulsanteProforma(),
-      h('span', { class: 'nota-campo' }, 'Il proforma prende destinatario, prestazioni e spese da questa pratica e il primo numero libero del registro.')));
+    h('div', { class: 'add-row fine' }, pulsante,
+      h('span', { class: 'nota-campo' }, 'Marca da bollo automatica sopra 77,47 €.')));
 }
 
 // Incarico: lettera (APE) o variazione (catasto) e compenso
@@ -1666,7 +1689,8 @@ function sezioneIncarico() {
             // tipo di pratica: la motivazione dell'incarico (nella versione FVG compare anche nel sopralluogo)
             field({ ...fields.immobile.find((d) => d.k === 'pratica'), l: 'Tipo di pratica (motivazione)' }, ['immobile']),
             ...firma)),
-    boxCompenso());
+    boxCompenso(),
+    boxTotale());
 }
 
 // totali, testi e campi calcolati, aggiornati a ogni modifica senza ridisegnare il form
@@ -2223,9 +2247,7 @@ function sezioniSopralluogo() {
     section('infissi', 'Serramenti', null, 'Una scheda per ogni infisso; usa "Duplica" per quelli simili',
       repeater({ key: 'infissi', label: 'Infisso', defs: fields.infisso, accent: acc, numbered: 'n' })),
     section('impianti', 'Impianto di riscaldamento', null, 'Codici di fornitura e generatori (caldaie, pompe di calore, …)',
-      h('p', { class: 'sub-title' }, 'Codici'),
-      grid(fields.codici, ['codici']),
-      h('p', { class: 'sub-title' }, 'Generatori'),
+      boxPdf('Codici', null, grid(fields.codici, ['codici'])),
       repeater({ key: 'riscaldamento', label: 'Impianto', defs: fields.riscaldamento, accent: acc, newItem: () => ({ regolazione: [], terminali: [] }) })),
     section('raffrescamento', 'Raffrescamento', null, 'Condizionatori e pompe di calore aria-aria. I box lasciati vuoti non compaiono nel PDF',
       repeater({ key: 'raffrescamento', label: 'Condizionatore', defs: fields.raffrescamento, accent: acc, pdf: true, vuoto: 'Nessun condizionatore: la sezione non comparirà nel PDF.' })),
@@ -2233,6 +2255,11 @@ function sezioniSopralluogo() {
       repeater({ key: 'altri', label: 'Apparecchio', defs: fields.altro, accent: acc, pdf: true })),
     sezioneFoto(),
     section('stampa', 'Stampa del sopralluogo', null, 'Opzioni del PDF del documento di sopralluogo di questa pratica.',
+      h('div', { class: 'f' }, h('label', {}, 'Grafica del documento'),
+        seg([['classica', 'Classica'], ['nuova', 'Nuova (prova)']], state.opzioni?.stile === 'nuovo' ? 'nuova' : 'classica', (val) => {
+          state.opzioni = { ...state.opzioni, stile: val === 'nuova' ? 'nuovo' : '' };
+          save();
+        })),
       h('label', { class: 'switch' },
         h('input', { type: 'checkbox', checked: !!state.opzioni?.footer, onchange: (e) => { state.opzioni = { ...state.opzioni, footer: e.target.checked }; save(); } }),
         'Aggiungi a piè di pagina i recapiti dello studio (il numero di pagina e, sull\'ultima pagina, giorno e ora di esportazione ci sono sempre)'),
@@ -2261,6 +2288,60 @@ function render() {
   aggiornaBarra();
 }
 
+// Quanto è compilata una sezione: [campi compilati, campi da compilare], oppure null (nessun indicatore).
+// Si contano solo i dati che servono davvero (es. del committente nome, codice fiscale e indirizzo; e-mail e
+// cellulare sono facoltativi). Le sezioni facoltative (raffrescamento, stufe) senza schede non hanno indicatore.
+const pieno = (v) => (Array.isArray(v) ? v.length > 0 : v != null && String(v).trim() !== '');
+const contaCampi = (obj, defs) => defs.filter((d) => !d.auto).reduce(([f, t], d) => [f + (pieno(obj?.[d.k]) ? 1 : 0), t + 1], [0, 0]);
+const contaSi = (...valori) => [valori.filter(Boolean).length, valori.length];
+const somma = (...parti) => parti.filter(Boolean).reduce(([a, b], [x, y]) => [a + x, b + y], [0, 0]);
+const soloCampi = (defs, chiavi) => defs.filter((d) => chiavi.includes(d.k));
+function completamento(id) {
+  const s = state;
+  const schede = (key, defs, facoltativo = false) => {
+    const l = s[key] || [];
+    if (!l.length) return facoltativo ? null : [0, 1];
+    return somma(...l.map((it) => contaCampi(it, defs)));
+  };
+  const prezzi = () => (s.proforma?.righe || []).length > 0 && s.proforma.righe.every((r) => pieno(r.prezzo));
+  switch (id) {
+    case 'committente': return contaCampi(s.committente, soloCampi(fields.committente, ['nome', 'cf', 'via', 'civ', 'citta', 'cap']));
+    case 'immobile': return contaCampi(s.immobile, soloCampi(fields.immobile, ['via', 'civ', 'citta', 'cap', 'fg', 'mapp', 'sub', ...(fvg() ? ['anno'] : [])]));
+    case 'incarico': return catasto()
+      ? contaSi(pieno(s.catasto?.data), pieno(s.catasto?.motivazione), pieno(s.informativa?.data), prezzi())
+      : contaSi(pieno(s.informativa?.data), pieno(s.immobile?.pratica), prezzi());
+    case 'visita': return contaSi(pieno(s.visita?.numero), pieno(s.visita?.data), pieno(s.certificatore?.nome), (s.presenti || []).length > 0, Boolean(s.pagine?.visita?.data));
+    case 'documenti': return contaSi(...DOCUMENTI.map((_, i) => pieno(s.documenti?.[i]?.stato)));
+    case 'rilievo': return contaSi((s.rilievo || []).some((r) => r && r.src) || Boolean(s.pagine?.rilievo?.data));
+    case 'confini': return contaSi(pieno(s.confini?.risc) || pieno(s.confini?.nonRisc));
+    case 'porte': return schede('porte', fields.porta);
+    case 'infissi': return schede('infissi', fields.infisso);
+    case 'impianti': return somma(contaCampi(s.codici, fields.codici), schede('riscaldamento', fields.riscaldamento));
+    case 'raffrescamento': return schede('raffrescamento', fields.raffrescamento, true);
+    case 'altri': return schede('altri', fields.altro.filter((d) => d.k !== 'note'), true);
+    case 'foto': return (s.foto || []).length ? somma(...s.foto.map((f) => contaSi(Boolean(f.src), pieno(f.didascalia)))) : [0, 1];
+    default: return null;
+  }
+}
+
+// Indicatore nel menu: cerchio vuoto (da fare), anello che si riempie (in corso), cerchio nero con la spunta (completa)
+function spunta(id) {
+  const c = completamento(id);
+  if (!c) return '';
+  const [f, t] = c;
+  const titolo = f >= t ? 'Sezione completa' : f ? `Compilata in parte (${f} di ${t})` : 'Da compilare';
+  if (f >= t) return `<svg viewBox="0 0 18 18" width="18" height="18" aria-label="${titolo}"><title>${titolo}</title><circle cx="9" cy="9" r="8" fill="currentColor"/><path d="M5.2 9.3l2.4 2.4 5-5.2" fill="none" stroke="var(--spunta-ink)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const lung = 2 * Math.PI * 7;
+  const arco = f ? `<circle cx="9" cy="9" r="7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-dasharray="${(lung * f) / t} ${lung}" transform="rotate(-90 9 9)"/>` : '';
+  return `<svg viewBox="0 0 18 18" width="18" height="18" aria-label="${titolo}"><title>${titolo}</title><circle cx="9" cy="9" r="7" fill="none" stroke="currentColor" stroke-opacity=".35" stroke-width="1.4" stroke-dasharray="${f ? 'none' : '2.2 2'}"/>${arco}</svg>`;
+}
+function aggiornaSpunte() {
+  document.querySelectorAll('#sidenav a[data-id]').forEach((a) => {
+    const el = a.querySelector('.spunta');
+    if (el) el.innerHTML = spunta(a.dataset.id);
+  });
+}
+
 function renderNav() {
   const nav = $('#sidenav');
   nav.replaceChildren(
@@ -2270,7 +2351,7 @@ function renderNav() {
       return h('a', {
         href: `#p/${id}`, 'data-id': id, class: id === sezioneAttiva ? 'active' : null,
         onclick: (e) => { e.preventDefault(); mostraSezione(id); },
-      }, h('span', { class: 'nav-label' }, label), n != null ? h('span', { class: 'count' }, String(n)) : null);
+      }, h('span', { class: 'spunta', 'aria-hidden': 'false', html: spunta(id) }), h('span', { class: 'nav-label' }, label), n != null ? h('span', { class: 'count' }, String(n)) : null);
     }));
 }
 

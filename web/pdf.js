@@ -106,7 +106,8 @@ function scriteVerticali(f, el) {
     cella.style.width = cs.width;
     cella.style.height = cs.height;
     cella.style.position = 'relative';
-    v.style.cssText += `;writing-mode:horizontal-tb;position:absolute;white-space:nowrap;margin:0;left:${rv.left - rc.left + rv.width / 2}px;top:${rv.top - rc.top + rv.height / 2}px;transform:translate(-50%,-50%) rotate(-90deg)`;
+    // da orizzontale la scritta è larga quanto era alta in verticale: così le scritte lunghe vanno a capo come prima
+    v.style.cssText += `;writing-mode:horizontal-tb;position:absolute;inline-size:auto;width:${Math.ceil(rv.height) + 1}px;white-space:${st.whiteSpace === 'nowrap' ? 'nowrap' : 'normal'};text-align:center;margin:0;left:${rv.left - rc.left + rv.width / 2}px;top:${rv.top - rc.top + rv.height / 2}px;transform:translate(-50%,-50%) rotate(-90deg)`;
   }
   return () => fatti.reverse().forEach((fn) => fn());
 }

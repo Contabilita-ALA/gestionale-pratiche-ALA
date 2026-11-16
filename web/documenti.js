@@ -21,6 +21,10 @@ export const FONTS_CSS = [
   face('roboto-latin-400-normal.woff2', 400, LATIN), face('roboto-latin-ext-400-normal.woff2', 400, LATIN_EXT),
   face('roboto-latin-700-normal.woff2', 700, LATIN), face('roboto-latin-ext-700-normal.woff2', 700, LATIN_EXT),
 ].join('\n');
+// Figtree (il font dell'app) per la grafica "nuova" del documento di sopralluogo
+const figtree = (peso) => [['latin', LATIN], ['latin-ext', LATIN_EXT]].map(([set, range]) =>
+  `@font-face{font-family:'Figtree';font-weight:${peso};font-style:normal;src:url(${url(`vendor/figtree/files/figtree-${set}-${peso}-normal.woff2`)}) format('woff2');unicode-range:${range};}`).join('\n');
+const FIGTREE_CSS = [400, 500, 600, 700].map(figtree).join('\n');
 const INFORMATIVA_CSS = `${FONTS_CSS}\n${face('roboto-latin-400-italic.woff2', 400, LATIN, 'italic')}\n${face('roboto-latin-ext-400-italic.woff2', 400, LATIN_EXT, 'italic')}`;
 
 const LOGO = url('assets/logo.png');
@@ -35,7 +39,7 @@ const risorsePie = () => (risorse ||= Promise.all([binario('vendor/roboto/files/
 const headerLogo = `<div style="width:100%;margin:0;padding:0.48cm 0 0 1.905cm;"><img src="${LOGO}" style="width:2.78cm;height:2.77cm;margin-top:0.48cm;display:block"></div>`;
 
 // --- Documento dei sopralluoghi (APE FVG) ---
-const parte = (data, p) => pdfImpaginato(renderDocument(data, { parte: p, fontsCss: FONTS_CSS, timbro: TIMBRO }), {
+const parte = (data, p) => pdfImpaginato(renderDocument(data, { parte: p, fontsCss: data?.opzioni?.stile === 'nuovo' ? `${FONTS_CSS}\n${FIGTREE_CSS}` : FONTS_CSS, timbro: TIMBRO }), {
   margini: { top: 4.24, bottom: data?.opzioni?.footer ? 3.7 : 2.54, left: 1.905, right: 1.905 },
   intestazione: headerLogo, prima: ADATTA_CELLE,
 }).then((r) => r.pdf);
