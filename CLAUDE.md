@@ -46,7 +46,8 @@ di 30 s, si rileggono dietro le quinte; se cambiano parte l'evento `archivio-agg
 - `html { scrollbar-gutter: stable }` e menu sticky a `top: 90px`: niente spostamenti passando da una pagina all'altra.
 - Documento di sopralluogo: in Stampa si sceglie la grafica "Classica" o "Nuova (prova)" (`opzioni.stile = 'nuovo'`,
   `cssNuovo()` in `lib/template.js`, font Figtree): cambia solo l'aspetto, le misure delle righe restano uguali.
-  Fondo bianco, righe alternate con velo di menta (#EEFAF7), ogni blocco bordato (1,3 pt) nel suo colore, committente menta.
+  Fondo bianco, ogni blocco bordato (1,3 pt) nel suo colore, committente menta. Righe alternate: velo di menta (#EEFAF7)
+  nelle pagine 1-2 (visita, elenco documenti), grigio chiaro (#F2F2F2) nelle schede dalla pagina 3.
 
 ## Versione
-Etichetta in basso a sinistra in `index.html` (`v3.5 web`): aggiornarla a ogni modifica.
+Etichetta in basso a sinistra in `index.html` (`v3.6 web`): aggiornarla a ogni modifica.
