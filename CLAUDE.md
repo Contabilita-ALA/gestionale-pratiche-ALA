@@ -32,6 +32,10 @@ Interfaccia e testi **in italiano**; commenti nel codice in italiano. L'utente n
 Con `window.DRIVE_FINTO = true` (impostato prima del caricamento, es. `page.addInitScript` di Playwright) l'app usa un
 Drive simulato in memoria (`window.__driveFinto` = elenco file) e l'accesso Google è finto: si può provare tutto offline
 servendo la cartella con `python3 -m http.server`.
+`window.DRIVE_RITARDO = 400` aggiunge un'attesa (ms) a ogni richiesta del Drive finto, come la rete vera;
+`window.__richiesteDrive` elenca le richieste fatte (per misurare la velocità).
+Gli elenchi di pratiche e registro restano in memoria (`ricorda` in `web/archivio.js`): si mostrano subito e, se hanno più
+di 30 s, si rileggono dietro le quinte; se cambiano parte l'evento `archivio-aggiornato` e `app.js` ridisegna la schermata.
 
 ## Versione
-Etichetta in basso a sinistra in `index.html` (`v3.2 web`): aggiornarla a ogni modifica.
+Etichetta in basso a sinistra in `index.html` (`v3.3 web`): aggiornarla a ogni modifica.

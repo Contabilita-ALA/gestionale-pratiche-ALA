@@ -229,6 +229,17 @@ function driveFinto() {
     },
     async cestina(id) { file.get(id).trashed = true; },
   };
+  // per le prove di velocità: window.DRIVE_RITARDO = millisecondi di attesa per ogni richiesta (come la rete vera),
+  // window.__richiesteDrive = elenco delle richieste fatte
+  window.__richiesteDrive = [];
+  for (const k of ['info', 'elenca', 'creaCartella', 'leggi', 'scrivi', 'aggiorna', 'cestina']) {
+    const fn = api[k];
+    api[k] = async (...arg) => {
+      window.__richiesteDrive.push(k);
+      if (window.DRIVE_RITARDO) await new Promise((ok) => setTimeout(ok, window.DRIVE_RITARDO));
+      return fn(...arg);
+    };
+  }
   return api;
 }
 

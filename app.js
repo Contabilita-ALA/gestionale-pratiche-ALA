@@ -2769,6 +2769,15 @@ window.addEventListener('hashchange', () => {
   if (nome !== vista || nome === 'pratica') vai(nome, { hash: false });
 });
 
+// Elenchi riletti da Drive dietro le quinte e cambiati (es. modifiche da un altro PC): si ridisegna la schermata aperta
+window.addEventListener('archivio-aggiornato', async () => {
+  try {
+    if (vista === 'home') await renderHome();
+    else if (vista.startsWith('elenco/')) { elenco = await api('api/pratiche'); renderElenco(); }
+    else if (vista === 'proforma' || vista === 'fatture') { await caricaRegistro(); renderElencoProforma(); }
+  } catch {}
+});
+
 document.querySelectorAll('.rail a[data-vista]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); vai(a.dataset.vista); }));
 $('#btnIndietro').addEventListener('click', () => vai(`elenco/${modulo()}`));
 

@@ -63,15 +63,31 @@ const cache = new Map();
 const inCorso = new Map();
 function svuotaCache() { cache.clear(); inCorso.clear(); elencoPratiche.svuota(); fileRegistro.svuota(); numerazione.svuota(); }
 
-// Memoria breve degli elenchi letti da Drive: cambiando schermata non si rilegge tutto ogni volta.
-// Si svuota dopo ogni salvataggio fatto da qui; quello che cambia da un altro PC si vede entro mezzo minuto.
+// Memoria degli elenchi letti da Drive: cambiando schermata si mostra subito quello che si conosce già.
+// Se l'elenco ha più di 30 secondi si rilegge da Drive "dietro le quinte"; se è cambiato (es. da un altro PC)
+// l'interfaccia riceve l'evento "archivio-aggiornato" e ridisegna la schermata. Dopo ogni salvataggio fatto da qui
+// la memoria si svuota e l'elenco si rilegge subito.
 const DURATA = 30000;
 function ricorda(leggi) {
-  let valore = null, quando = 0;
+  let valore = null, quando = 0, inAggiornamento = false;
   const f = (fresco = false) => {
-    if (fresco || !valore || Date.now() - quando > DURATA) {
+    if (fresco || !valore) {
       quando = Date.now();
-      valore = leggi().catch((e) => { valore = null; throw e; });
+      const v = leggi();
+      valore = v;
+      v.catch(() => { if (valore === v) valore = null; });
+      return v;
+    }
+    if (Date.now() - quando > DURATA && !inAggiornamento) {
+      quando = Date.now();
+      inAggiornamento = true;
+      const vecchio = valore;
+      leggi().then(async (nuovo) => {
+        if (valore !== vecchio) return; // nel frattempo c'è stato un salvataggio: vale la lettura nuova
+        valore = Promise.resolve(nuovo);
+        const prima = await vecchio.catch(() => null);
+        if (JSON.stringify(prima) !== JSON.stringify(nuovo)) window.dispatchEvent(new Event('archivio-aggiornato'));
+      }, () => {}).finally(() => { inAggiornamento = false; });
     }
     return valore;
   };
@@ -366,7 +382,7 @@ export const registro = {
   async doppione(pf) {
     if (!gruppo(pf)) return null;
     const anno = annoDi(pf);
-    return (await elencoRegistro()).find((x) => x.id !== pf.id && gruppo(x) === gruppo(pf) && x.anno === anno && String(x.numero).trim() === String(pf.numero).trim()) || null;
+    return (await elencoRegistro(true)).find((x) => x.id !== pf.id && gruppo(x) === gruppo(pf) && x.anno === anno && String(x.numero).trim() === String(pf.numero).trim()) || null;
   },
   async proformaPerFattura(f) {
     const tot = importo(f.totale);
