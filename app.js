@@ -48,7 +48,7 @@ const icona = (nome, size = 18) => `<svg class="ico" width="${size}" height="${s
 
 const MODULI = {
   ape: { nome: 'APE', colore: '#F5D867', colore2: '#E9C337', forma: 'ape', icona: 'ape', descrizione: 'Informativa e lettera di incarico; nella versione FVG anche il documento di sopralluogo.' },
-  catasto: { nome: 'Catasto', colore: '#9AAB63', colore2: '#7E8F4A', forma: 'catasto', icona: 'catasto', descrizione: 'Lettera di incarico per la variazione catastale, con protocollo e spese non imponibili.' },
+  catasto: { nome: 'Catasto', colore: '#A8D5A2', colore2: '#86BF7F', forma: 'catasto', icona: 'catasto', descrizione: 'Lettera di incarico per la variazione catastale, con protocollo e spese non imponibili.' },
   pratica: { nome: 'Pratiche', colore: '#B6CAEB', colore2: '#8FAEE0', forma: 'pratiche', icona: 'pratica', descrizione: 'Nota tecnica e offerta economica per le pratiche edilizie; la bozza anche con una chat gratuita.' },
   proforma: { nome: 'Proforma', colore: '#F5B8DB', colore2: '#EE95C5', forma: 'maialino', icona: 'proforma', descrizione: 'Registro unico con numerazione progressiva; i dati si prendono dalle pratiche.' },
   fatture: { nome: 'Fatture', colore: '#F5B8DB', colore2: '#EE95C5', forma: 'maialino', icona: 'euro', descrizione: 'Fatture emesse ed entrate: gli incassi dello studio.' },

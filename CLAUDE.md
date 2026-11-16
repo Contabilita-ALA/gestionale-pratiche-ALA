@@ -9,8 +9,10 @@ Interfaccia e testi **in italiano**; commenti nel codice in italiano. L'utente n
 - Schema cartelle: APE → `00_APE/VENETO` o `00_APE/FRIULI VENEZIA GIULIA`, catasto → `00_CATASTO`, entrambi con nome
   `PAESE VIA CIVICO RIF COGNOME` (`nomeCartella` in `lib/nomi.js`); pratiche edilizie → nella principale come
   `NN_Cognome_Descrizione` con NN = massimo esistente + 1 (`nomeCartellaNumerata` in `app.js`).
-- Stile grafico "Intelly": fondo crema, barra nera, card pastello (#F5B8DB rosa proforma/fatture, #9AAB63 verde catasto,
-  #B6CAEB azzurro pratiche, #F5D867 giallo APE), icone in `assets/forme` (maschere colorate via CSS).
+- Colore dello studio: **verde menta #75E0CC** (logo). Dalla v3.5 l'app usa toni freddi intorno al menta (fondo #F3F7F6,
+  card #E4EDEA, accenti menta: voce attiva del menu, ricerca, pulsante indietro), barra nera, card pastello
+  (#F5B8DB rosa proforma/fatture, #A8D5A2 verde salvia catasto, #B6CAEB azzurro pratiche, #F5D867 giallo APE),
+  icone in `assets/forme` (maschere colorate via CSS). Niente beige: con il menta stona (anche nei PDF).
 
 ## Architettura
 - `index.html` carica `web/avvio.js`: accesso Google (GIS token client, `web/gdrive.js`), scelta cartella, poi `app.js`.
@@ -44,6 +46,7 @@ di 30 s, si rileggono dietro le quinte; se cambiano parte l'evento `archivio-agg
 - `html { scrollbar-gutter: stable }` e menu sticky a `top: 90px`: niente spostamenti passando da una pagina all'altra.
 - Documento di sopralluogo: in Stampa si sceglie la grafica "Classica" o "Nuova (prova)" (`opzioni.stile = 'nuovo'`,
   `cssNuovo()` in `lib/template.js`, font Figtree): cambia solo l'aspetto, le misure delle righe restano uguali.
+  Fondo bianco, righe alternate con velo di menta (#EEFAF7), ogni blocco bordato (1,3 pt) nel suo colore, committente menta.
 
 ## Versione
-Etichetta in basso a sinistra in `index.html` (`v3.4 web`): aggiornarla a ogni modifica.
+Etichetta in basso a sinistra in `index.html` (`v3.5 web`): aggiornarla a ogni modifica.
