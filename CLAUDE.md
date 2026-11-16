@@ -19,7 +19,10 @@ Interfaccia e testi **in italiano**; commenti nel codice in italiano. L'utente n
 - `web/archivio.js`: archivio su Drive. Pratiche in `00_GESTIONALE/pratiche/<uid>.json`, registro proforma in
   `00_PROFORMA/registro/<id>.json` + `numerazione.json`; i riassunti per gli elenchi stanno nelle `appProperties` dei file.
 - `web/pdf.js` + `web/documenti.js`: PDF nel browser. HTML dei modelli (`lib/*.js`) → impaginazione con Paged.js in un
-  iframe nascosto → foto di ogni pagina (html-to-image, 250 dpi JPEG) → pdf-lib; piè di pagina vettoriale con pdf-lib.
+  iframe nascosto → foto di ogni pagina con html2canvas (200 dpi JPEG; le scritte verticali vengono ruotate a mano perché
+  html2canvas non gestisce writing-mode) → pdf-lib. Sopra ogni foto il testo invisibile (Helvetica, opacità 0) nelle
+  posizioni misurate nella pagina, così il PDF si può cercare e copiare. Piè di pagina vettoriale con pdf-lib.
+  (html-to-image era stato scartato: nella foto non usava il font Roboto.)
 - `lib/`: modelli e logica condivisi (proforma, informativa, catasto, offerta, nomi, importa, allegati, comuni…).
 - OCR documenti d'identità/libretti: tesseract.js nel browser (motore e lingua scaricati da jsDelivr la prima volta).
 - Google OAuth: client web del progetto Firebase della contabilità (`contabilita-4949c`), scope `drive`. Origine
@@ -31,4 +34,4 @@ Drive simulato in memoria (`window.__driveFinto` = elenco file) e l'accesso Goog
 servendo la cartella con `python3 -m http.server`.
 
 ## Versione
-Etichetta in basso a sinistra in `index.html` (`v3.0 web`): aggiornarla a ogni modifica.
+Etichetta in basso a sinistra in `index.html` (`v3.1 web`): aggiornarla a ogni modifica.

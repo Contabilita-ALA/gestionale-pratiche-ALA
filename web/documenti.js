@@ -31,7 +31,8 @@ const binario = async (p) => new Uint8Array(await (await fetch(url(p))).arrayBuf
 let risorse;
 const risorsePie = () => (risorse ||= Promise.all([binario('vendor/roboto/files/roboto-latin-400-normal.woff'), binario('assets/footer.png')]));
 
-const headerLogo = `<div style="width:100%;margin:0;padding:0 0 0 1.905cm;"><img src="${LOGO}" style="width:2.78cm;height:2.77cm;margin-top:0.48cm;display:block"></div>`;
+// Chrome lasciava circa mezzo centimetro sopra l'intestazione: qui si aggiunge a mano (padding-top)
+const headerLogo = `<div style="width:100%;margin:0;padding:0.48cm 0 0 1.905cm;"><img src="${LOGO}" style="width:2.78cm;height:2.77cm;margin-top:0.48cm;display:block"></div>`;
 
 // --- Documento dei sopralluoghi (APE FVG) ---
 const parte = (data, p) => pdfImpaginato(renderDocument(data, { parte: p, fontsCss: FONTS_CSS, timbro: TIMBRO }), {
@@ -149,7 +150,7 @@ export async function pdfOfferta(data, studio) {
     const committente = p.spett ? data?.committente || {} : null;
     const { pdf } = await pdfImpaginato(p.html, {
       margini: { top: 4.5, bottom: 3.6, left: 1.905, right: 1.905 },
-      intestazione: (i) => intestazione(LOGO, FONTS_CSS, i === 0 ? committente : null),
+      intestazione: (i) => `<div style="padding-top:0.48cm">${intestazione(LOGO, FONTS_CSS, i === 0 ? committente : null)}</div>`,
     });
     const src = await PDFDocument.load(pdf);
     for (const pag of await out.copyPages(src, src.getPageIndices())) out.addPage(pag);
