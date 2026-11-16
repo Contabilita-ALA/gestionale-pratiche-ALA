@@ -632,3 +632,12 @@ body.g .doc-row:nth-child(even) { background: #EEF6F1; }
 .tab tr.clic:hover td, .riga-card:hover { background: #F8FBF9; }
 body.g .chip { background: #F4F9F6; }
 body.g .seg { background: var(--sabbia2); }
+
+/* v3.12 — macro categorie con colori ben distinti: APE Matcha, Catasto Azure, Pratiche Peach, Proforma/Fatture Orchid */
+:root {
+  --mod: #8FB78F;
+  --mod2: #6E9A6E;
+  --rosa: #F3A5BC;     /* proforma e fatture (Orchid) */
+  --azzurro: #B4CCCF;  /* Azure */
+  --giallo: #FFC49B;   /* avvisi "da incassare" (Peach) */
+}

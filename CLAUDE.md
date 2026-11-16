@@ -12,8 +12,8 @@ Interfaccia e testi **in italiano**; commenti nel codice in italiano. L'utente n
 - Colore del logo: verde menta #75E0CC. Palette dell'app (v3.10, scelta dallo studio): **Mint Sorbet #B8D8C4,
   Caramel Clay #A86F46, Deep Juniper #355B56, Cream Linen #F3EBDD**. Mint Sorbet è il colore predominante (v3.11): barra laterale
   menta, riquadri/pannelli menta chiaro (`--sabbia` #D6E8DC); fondo crema; pulsanti, voce attiva e testi ginepro
-  (`--nero` = #355B56, testo `--ink` #22302D); pallino del menu caramello, card dei moduli: APE menta #B8D8C4, Catasto sabbia #E2CFB0,
-  Pratiche ginepro chiaro #A9C7BF, Proforma/Fatture caramello chiaro #E3B994 (in `MODULI` di app.js e `:root` di tema.css).
+  (`--nero` = #355B56, testo `--ink` #22302D); pallino del menu caramello, card dei moduli (v3.12, ben distinte): APE Matcha #8FB78F,
+  Catasto Azure #B4CCCF, Pratiche Peach #FFC49B, Proforma/Fatture Orchid #F3A5BC (in `MODULI` di app.js e `:root` di tema.css).
   Icone in `assets/forme` (maschere colorate via CSS). Il PDF "nuovo" ha colori suoi (lib/template.js, `cssNuovo`).
 
 ## Architettura
@@ -58,4 +58,4 @@ di 30 s, si rileggono dietro le quinte; se cambiano parte l'evento `archivio-agg
   nelle pagine 1-2 (visita, elenco documenti), grigio chiaro (#F2F2F2) nelle schede dalla pagina 3.
 
 ## Versione
-Etichetta in basso a sinistra in `index.html` (`v3.11 web`): aggiornarla a ogni modifica.
+Etichetta in basso a sinistra in `index.html` (`v3.12 web`): aggiornarla a ogni modifica.
