@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestionale Studio</title>
+  <link rel="icon" href="assets/logo.png">
+  <!-- installabile come app (Chrome/Edge: menu → "Installa…"), con il logo come icona -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/icona-192.png">
+  <meta name="theme-color" content="#F7F1E6">
+  <link rel="stylesheet" href="vendor/roboto/400.css">
+  <link rel="stylesheet" href="vendor/roboto/500.css">
+  <link rel="stylesheet" href="vendor/roboto/700.css">
+  <link rel="stylesheet" href="vendor/figtree/300.css">
+  <link rel="stylesheet" href="vendor/figtree/400.css">
+  <link rel="stylesheet" href="vendor/figtree/500.css">
+  <link rel="stylesheet" href="vendor/figtree/600.css">
+  <link rel="stylesheet" href="vendor/figtree/700.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="tema.css">
+</head>
+<body class="g">
+  <!-- Menu dei moduli -->
+  <aside class="rail" aria-label="Moduli">
+    <a class="rail-logo" href="#home" data-vista="home" title="Home">
+      <img src="assets/logo.png" alt="">
+      <span><strong>studio</strong><em>Agnese Lorenzon Architetto</em></span>
+    </a>
+    <nav>
+      <p class="rail-titolo">Generale</p>
+      <a href="#home" data-vista="home"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg><span>Home</span></a>
+      <p class="rail-titolo">Moduli</p>
+      <a href="#ape" data-vista="elenco/ape" style="--c:#F5D867"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg><span>APE</span><small>Veneto · FVG</small></a>
+      <a href="#catasto" data-vista="elenco/catasto" style="--c:#9AAB63"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20z"/><path d="M9 4v13.5M15 6.5V20"/></svg><span>Catasto</span></a>
+      <a href="#pratiche" data-vista="elenco/pratica" style="--c:#B6CAEB"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg><span>Pratiche</span></a>
+      <p class="rail-titolo">Strumenti</p>
+      <a href="#proforma" data-vista="proforma" style="--c:#F5B8DB"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9.5 8h5M9.5 12h5"/></svg><span>Proforma</span></a>
+      <a href="#fatture" data-vista="fatture" style="--c:#9AAB63"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M15.5 8.5a3.5 3.5 0 1 0 0 7"/><path d="M8 11h6M8 13h6"/></svg><span>Fatture</span></a>
+    </nav>
+    <div class="rail-fondo">
+      <a href="#opzioni" data-vista="opzioni"><svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg><span>Opzioni</span></a>
+      <span class="versione" title="Versione dell'app">v3.0 web</span>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <!-- viste senza pratica: titolo e azioni -->
+      <div class="bar-vista" id="barVista">
+        <h1 id="barTitolo">Home</h1>
+        <div class="actions" id="barAzioni"></div>
+      </div>
+      <!-- pratica aperta: modulo, nome, salvataggio e documenti -->
+      <div class="bar-pratica" id="barPratica" hidden>
+        <button class="btn ghost icona-sola" id="btnIndietro" type="button" title="Torna all'elenco del modulo" aria-label="Torna all'elenco">
+          <svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="bar-nome">
+          <span class="pill-mod pieno" id="barModulo"></span>
+          <div><strong id="barNome"></strong><span id="saveState"></span></div>
+        </div>
+        <div class="actions">
+          <div class="doc-group" id="grpIncarico" title="Lettera di incarico da far firmare">
+            <span id="lblIncarico">Incarico</span>
+            <button class="btn small" id="btnPrevInf" type="button">Anteprima</button>
+            <button class="btn small scarica" id="btnInf" type="button">Scarica</button>
+          </div>
+          <div class="doc-group" id="grpOfferta" title="Nota tecnica e offerta economica">
+            <span>Offerta</span>
+            <button class="btn small" id="btnPrevOff" type="button">Anteprima</button>
+            <button class="btn small scarica" id="btnOff" type="button">Scarica</button>
+          </div>
+          <div class="doc-group" id="grpSopralluogo" title="Documento dati d'ingresso e sopralluogo">
+            <span>Sopralluogo</span>
+            <button class="btn small" id="btnPreview" type="button">Anteprima</button>
+            <button class="btn small scarica" id="btnPdf" type="button">Scarica PDF</button>
+          </div>
+          <div class="doc-group" id="grpAllegati" title="Allegati per il portale FVGEnergia, rinominati, nella cartella ALLEGATI FVG della pratica (senza cartella: in uno zip)">
+            <span>Allegati FVG</span>
+            <button class="btn small scarica" id="btnZip" type="button">Scarica</button>
+          </div>
+          <button class="btn" id="btnProforma" type="button" title="Crea un proforma nel registro con i dati di questa pratica">Crea proforma</button>
+          <button class="btn primary" id="btnSave" type="button" title="Salva la pratica nell'archivio di questo PC e ne mette una copia (.json) nella cartella della pratica">Salva</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="view" data-vista="home" id="viewHome"></div>
+    <div class="view" data-vista="elenco" id="viewElenco" hidden></div>
+    <div class="view view-pratica" data-vista="pratica" id="viewPratica" hidden>
+      <nav class="sidenav" id="sidenav" aria-label="Schede della pratica"></nav>
+      <main id="form" class="form"></main>
+    </div>
+    <div class="view view-proforma" data-vista="proforma" id="viewProforma" hidden></div>
+    <div class="view view-opzioni" data-vista="opzioni" id="viewOpzioni" hidden></div>
+  </div>
+
+  <aside class="preview" id="preview" hidden>
+    <div class="preview-bar">
+      <strong id="previewTitle">Anteprima PDF</strong>
+      <div>
+        <button class="btn" id="btnRefresh" type="button">Aggiorna</button>
+        <button class="btn ghost" id="btnClosePreview" type="button">Chiudi</button>
+      </div>
+    </div>
+    <div class="preview-body">
+      <div class="spinner" id="previewSpinner" hidden>Generazione in corso…</div>
+      <iframe id="previewFrame" title="Anteprima PDF"></iframe>
+    </div>
+  </aside>
+
+  <dialog class="confirm" id="confirmDialog" aria-labelledby="confirmTitle">
+    <div class="confirm-body">
+      <strong id="confirmTitle"></strong>
+      <p id="confirmText"></p>
+      <div class="confirm-actions">
+        <button class="btn ghost" id="confirmCancel" type="button">Annulla</button>
+        <button class="btn primary" id="confirmOk" type="button">Conferma</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="web/avvio.js"></script>
+</body>
+</html>
