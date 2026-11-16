@@ -20,11 +20,15 @@ Interfaccia e testi **in italiano**; commenti nel codice in italiano. L'utente n
   browser da `web/backend.js` (stesse rotte del vecchio `server.js` Express).
 - `web/archivio.js`: archivio su Drive. Pratiche in `00_GESTIONALE/pratiche/<uid>.json`, registro proforma in
   `00_PROFORMA/registro/<id>.json` + `numerazione.json`; i riassunti per gli elenchi stanno nelle `appProperties` dei file.
-- `web/pdf.js` + `web/documenti.js`: PDF nel browser. HTML dei modelli (`lib/*.js`) → impaginazione con Paged.js in un
-  iframe nascosto → foto di ogni pagina con html2canvas (200 dpi JPEG; le scritte verticali vengono ruotate a mano perché
-  html2canvas non gestisce writing-mode) → pdf-lib. Sopra ogni foto il testo invisibile (Helvetica, opacità 0) nelle
-  posizioni misurate nella pagina, così il PDF si può cercare e copiare. Piè di pagina vettoriale con pdf-lib.
-  (html-to-image era stato scartato: nella foto non usava il font Roboto.)
+- `web/pdf.js` + `web/documenti.js` + `web/vettoriale.js`: PDF **vettoriali** nel browser (dalla v3.8). HTML dei modelli
+  (`lib/*.js`) → impaginazione con Paged.js in un iframe nascosto → `disegnaPagina` (vettoriale.js) ridisegna ogni pagina
+  con pdf-lib leggendo dal DOM sfondi, bordi (anche arrotondati/tratteggiati, con ritaglio), testo parola per parola
+  (posizione misurata con Range, linea di base dalle metriche del font), testo verticale, immagini, caselle `.cb.on`
+  (X dei ::before/::after) e numeri degli elenchi (::marker). Font: le regole @font-face del documento; i .woff2 si
+  incorporano dalla copia .ttf in `vendor/ttf` (pdf-lib/fontkit si bloccano con i woff2 in subset; i .ttf sono stati
+  convertiti con fontTools). Riserva: se il vettoriale fallisce (o con `window.PDF_FOTO = true`) si usa la vecchia "foto"
+  delle pagine con html2canvas + testo invisibile. Piè di pagina vettoriale con pdf-lib (documenti.js).
+  Se un modello usa qualcosa di nuovo (gradienti, ombre, ::before con testo…) va aggiunto in vettoriale.js.
 - `lib/`: modelli e logica condivisi (proforma, informativa, catasto, offerta, nomi, importa, allegati, comuni…).
 - OCR documenti d'identità/libretti: tesseract.js nel browser (motore e lingua scaricati da jsDelivr la prima volta).
 - Google OAuth: client web del progetto Firebase della contabilità (`contabilita-4949c`), scope `drive`. Origine
@@ -50,4 +54,4 @@ di 30 s, si rileggono dietro le quinte; se cambiano parte l'evento `archivio-agg
   nelle pagine 1-2 (visita, elenco documenti), grigio chiaro (#F2F2F2) nelle schede dalla pagina 3.
 
 ## Versione
-Etichetta in basso a sinistra in `index.html` (`v3.7 web`): aggiornarla a ogni modifica.
+Etichetta in basso a sinistra in `index.html` (`v3.8 web`): aggiornarla a ogni modifica.

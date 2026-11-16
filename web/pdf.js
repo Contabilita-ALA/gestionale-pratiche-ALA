@@ -1,9 +1,11 @@
-// Generazione dei PDF nel browser (al posto di Chrome sul PC).
+// Generazione dei PDF nel browser (al posto di Chrome sul PC). Dalla v3.8 le pagine si ridisegnano in vettoriale
+// (web/vettoriale.js); la "foto" della pagina descritta qui sotto resta solo come riserva.
 // Il documento HTML (gli stessi modelli della versione per PC) si impagina in un iframe nascosto con Paged.js,
 // ogni pagina A4 si fotografa ad alta risoluzione e le foto diventano le pagine del PDF (pdf-lib). Sopra ogni foto c'è
 // il testo della pagina, invisibile ma nella stessa posizione (come nei PDF scansionati con l'OCR): si seleziona e si cerca.
 // Intestazioni e piè di pagina "come Chrome" (headerTemplate/footerTemplate) si aggiungono a ogni pagina prima della foto.
 import { PDFDocument, StandardFonts, rgb } from '../vendor/pdf-lib.esm.min.js';
+import { nuovoContesto, disegnaPagina } from './vettoriale.js';
 
 const BASE = new URL('..', import.meta.url).href; // radice del sito, per i file di vendor/
 const MM = 96 / 25.4; // px CSS per millimetro
@@ -170,6 +172,26 @@ async function pdfDaFoto(immagini, titolo) {
   return out.save();
 }
 
+// PDF delle pagine: vettoriale (testo vero, riquadri e linee, vedi vettoriale.js). Se qualcosa va storto si usa
+// la vecchia strada, la "foto" di ogni pagina con il testo invisibile sopra (anche con window.PDF_FOTO = true).
+async function pdfDaPagine(f, elenco, titolo) {
+  if (!window.PDF_FOTO) {
+    try {
+      const out = await PDFDocument.create();
+      if (titolo) out.setTitle(titolo);
+      out.setCreator('Gestionale Studio');
+      const ctx = nuovoContesto(out);
+      for (const p of elenco) await disegnaPagina(ctx, p);
+      return await out.save();
+    } catch (err) {
+      console.warn('PDF vettoriale non riuscito: si usa la foto delle pagine', err);
+    }
+  }
+  const foto_ = [];
+  for (const p of elenco) foto_.push(await foto(f, p));
+  return pdfDaFoto(foto_, titolo);
+}
+
 // Riquadri fissi aggiunti a ogni pagina (come headerTemplate/footerTemplate di Chrome): HTML posizionato in alto o in basso
 function aggiungiRiquadri(doc, pagina, i, n, { intestazione, piede }) {
   const metti = (html, dove) => {
@@ -203,12 +225,9 @@ export function pdfImpaginato(html, { margini, intestazione, piede, prima, titol
       await f.contentWindow.PagedPolyfill.preview();
       await doc.fonts.ready;
       const elenco = [...doc.querySelectorAll('.pagedjs_page')];
-      const out = [];
-      for (const [i, p] of elenco.entries()) {
-        aggiungiRiquadri(doc, p, i, elenco.length, { intestazione, piede });
-        out.push(await foto(f, p));
-      }
-      return { pdf: await pdfDaFoto(out, titolo), pagine: elenco.length };
+      for (const [i, p] of elenco.entries()) aggiungiRiquadri(doc, p, i, elenco.length, { intestazione, piede });
+      await Promise.all([...doc.images].map((img) => (img.complete ? null : new Promise((ok) => { img.onload = img.onerror = ok; }))));
+      return { pdf: await pdfDaPagine(f, elenco, titolo), pagine: elenco.length };
     } finally {
       f.remove();
     }
@@ -224,9 +243,8 @@ export function pdfPagineFisse(html, { selettore = '.pagina', prima, titolo } = 
       doc.body.style.margin = '0';
       eseguiScript(f, prima);
       await doc.fonts.ready;
-      const out = [];
-      for (const p of doc.querySelectorAll(selettore)) out.push(await foto(f, p));
-      return { pdf: await pdfDaFoto(out, titolo), pagine: out.length };
+      const elenco = [...doc.querySelectorAll(selettore)];
+      return { pdf: await pdfDaPagine(f, elenco, titolo), pagine: elenco.length };
     } finally {
       f.remove();
     }
