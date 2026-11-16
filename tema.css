@@ -641,3 +641,11 @@ body.g .seg { background: var(--sabbia2); }
   --azzurro: #B4CCCF;  /* Azure */
   --giallo: #FFC49B;   /* avvisi "da incassare" (Peach) */
 }
+
+/* v3.13 — APE Azure, Catasto Orchid, Pratiche Peach, Proforma e Fatture Pistachio */
+:root {
+  --mod: #B4CCCF;
+  --mod2: #87A8AC;
+  --rosa: #CBE6C7;     /* proforma e fatture (Pistachio) */
+  --verde: #8FB78F;    /* etichette "Pagato" (Matcha), leggibili anche sul pistacchio */
+}

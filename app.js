@@ -47,11 +47,11 @@ const ICONE = {
 const icona = (nome, size = 18) => `<svg class="ico" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONE[nome] || ''}</svg>`;
 
 const MODULI = {
-  ape: { nome: 'APE', colore: '#8FB78F', colore2: '#6E9A6E', forma: 'ape', icona: 'ape', descrizione: 'Informativa e lettera di incarico; nella versione FVG anche il documento di sopralluogo.' },
-  catasto: { nome: 'Catasto', colore: '#B4CCCF', colore2: '#87A8AC', forma: 'catasto', icona: 'catasto', descrizione: 'Lettera di incarico per la variazione catastale, con protocollo e spese non imponibili.' },
+  ape: { nome: 'APE', colore: '#B4CCCF', colore2: '#87A8AC', forma: 'ape', icona: 'ape', descrizione: 'Informativa e lettera di incarico; nella versione FVG anche il documento di sopralluogo.' },
+  catasto: { nome: 'Catasto', colore: '#F3A5BC', colore2: '#E07F9D', forma: 'catasto', icona: 'catasto', descrizione: 'Lettera di incarico per la variazione catastale, con protocollo e spese non imponibili.' },
   pratica: { nome: 'Pratiche', colore: '#FFC49B', colore2: '#F2A26C', forma: 'pratiche', icona: 'pratica', descrizione: 'Nota tecnica e offerta economica per le pratiche edilizie; la bozza anche con una chat gratuita.' },
-  proforma: { nome: 'Proforma', colore: '#F3A5BC', colore2: '#E07F9D', forma: 'maialino', icona: 'proforma', descrizione: 'Registro unico con numerazione progressiva; i dati si prendono dalle pratiche.' },
-  fatture: { nome: 'Fatture', colore: '#F3A5BC', colore2: '#E07F9D', forma: 'maialino', icona: 'euro', descrizione: 'Fatture emesse ed entrate: gli incassi dello studio.' },
+  proforma: { nome: 'Proforma', colore: '#CBE6C7', colore2: '#9CCB95', forma: 'maialino', icona: 'proforma', descrizione: 'Registro unico con numerazione progressiva; i dati si prendono dalle pratiche.' },
+  fatture: { nome: 'Fatture', colore: '#CBE6C7', colore2: '#9CCB95', forma: 'maialino', icona: 'euro', descrizione: 'Fatture emesse ed entrate: gli incassi dello studio.' },
 };
 
 // ---------------------------------------------------------------------------
