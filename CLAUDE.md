@@ -50,4 +50,4 @@ di 30 s, si rileggono dietro le quinte; se cambiano parte l'evento `archivio-agg
   nelle pagine 1-2 (visita, elenco documenti), grigio chiaro (#F2F2F2) nelle schede dalla pagina 3.
 
 ## Versione
-Etichetta in basso a sinistra in `index.html` (`v3.6 web`): aggiornarla a ogni modifica.
+Etichetta in basso a sinistra in `index.html` (`v3.7 web`): aggiornarla a ogni modifica.
