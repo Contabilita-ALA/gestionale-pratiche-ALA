@@ -9,10 +9,11 @@ Interfaccia e testi **in italiano**; commenti nel codice in italiano. L'utente n
 - Schema cartelle: APE → `00_APE/VENETO` o `00_APE/FRIULI VENEZIA GIULIA`, catasto → `00_CATASTO`, entrambi con nome
   `PAESE VIA CIVICO RIF COGNOME` (`nomeCartella` in `lib/nomi.js`); pratiche edilizie → nella principale come
   `NN_Cognome_Descrizione` con NN = massimo esistente + 1 (`nomeCartellaNumerata` in `app.js`).
-- Colore dello studio: **verde menta #75E0CC** (logo). Dalla v3.5 l'app usa toni freddi intorno al menta (fondo #F3F7F6,
-  card #E4EDEA, accenti menta: voce attiva del menu, ricerca, pulsante indietro), barra nera, card pastello
-  (#F5B8DB rosa proforma/fatture, #A8D5A2 verde salvia catasto, #B6CAEB azzurro pratiche, #F5D867 giallo APE),
-  icone in `assets/forme` (maschere colorate via CSS). Niente beige: con il menta stona (anche nei PDF).
+- Colore del logo: verde menta #75E0CC. Palette dell'app (v3.10, scelta dallo studio): **Mint Sorbet #B8D8C4,
+  Caramel Clay #A86F46, Deep Juniper #355B56, Cream Linen #F3EBDD**. Fondo crema, barra laterale e pulsanti ginepro
+  (`--nero` = #355B56, testo `--ink` #22302D), card dei moduli: APE menta #B8D8C4, Catasto sabbia #E2CFB0,
+  Pratiche ginepro chiaro #A9C7BF, Proforma/Fatture caramello chiaro #E3B994 (in `MODULI` di app.js e `:root` di tema.css).
+  Icone in `assets/forme` (maschere colorate via CSS). Il PDF "nuovo" ha colori suoi (lib/template.js, `cssNuovo`).
 
 ## Architettura
 - `index.html` carica `web/avvio.js`: accesso Google (GIS token client, `web/gdrive.js`), scelta cartella, poi `app.js`.
@@ -56,4 +57,4 @@ di 30 s, si rileggono dietro le quinte; se cambiano parte l'evento `archivio-agg
   nelle pagine 1-2 (visita, elenco documenti), grigio chiaro (#F2F2F2) nelle schede dalla pagina 3.
 
 ## Versione
-Etichetta in basso a sinistra in `index.html` (`v3.9 web`): aggiornarla a ogni modifica.
+Etichetta in basso a sinistra in `index.html` (`v3.10 web`): aggiornarla a ogni modifica.

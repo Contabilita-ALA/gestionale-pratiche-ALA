@@ -47,11 +47,11 @@ const ICONE = {
 const icona = (nome, size = 18) => `<svg class="ico" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONE[nome] || ''}</svg>`;
 
 const MODULI = {
-  ape: { nome: 'APE', colore: '#F5D867', colore2: '#E9C337', forma: 'ape', icona: 'ape', descrizione: 'Informativa e lettera di incarico; nella versione FVG anche il documento di sopralluogo.' },
-  catasto: { nome: 'Catasto', colore: '#A8D5A2', colore2: '#86BF7F', forma: 'catasto', icona: 'catasto', descrizione: 'Lettera di incarico per la variazione catastale, con protocollo e spese non imponibili.' },
-  pratica: { nome: 'Pratiche', colore: '#B6CAEB', colore2: '#8FAEE0', forma: 'pratiche', icona: 'pratica', descrizione: 'Nota tecnica e offerta economica per le pratiche edilizie; la bozza anche con una chat gratuita.' },
-  proforma: { nome: 'Proforma', colore: '#F5B8DB', colore2: '#EE95C5', forma: 'maialino', icona: 'proforma', descrizione: 'Registro unico con numerazione progressiva; i dati si prendono dalle pratiche.' },
-  fatture: { nome: 'Fatture', colore: '#F5B8DB', colore2: '#EE95C5', forma: 'maialino', icona: 'euro', descrizione: 'Fatture emesse ed entrate: gli incassi dello studio.' },
+  ape: { nome: 'APE', colore: '#B8D8C4', colore2: '#8FBBA0', forma: 'ape', icona: 'ape', descrizione: 'Informativa e lettera di incarico; nella versione FVG anche il documento di sopralluogo.' },
+  catasto: { nome: 'Catasto', colore: '#E2CFB0', colore2: '#C4A77D', forma: 'catasto', icona: 'catasto', descrizione: 'Lettera di incarico per la variazione catastale, con protocollo e spese non imponibili.' },
+  pratica: { nome: 'Pratiche', colore: '#A9C7BF', colore2: '#729C93', forma: 'pratiche', icona: 'pratica', descrizione: 'Nota tecnica e offerta economica per le pratiche edilizie; la bozza anche con una chat gratuita.' },
+  proforma: { nome: 'Proforma', colore: '#E3B994', colore2: '#B98058', forma: 'maialino', icona: 'proforma', descrizione: 'Registro unico con numerazione progressiva; i dati si prendono dalle pratiche.' },
+  fatture: { nome: 'Fatture', colore: '#E3B994', colore2: '#B98058', forma: 'maialino', icona: 'euro', descrizione: 'Fatture emesse ed entrate: gli incassi dello studio.' },
 };
 
 // ---------------------------------------------------------------------------
