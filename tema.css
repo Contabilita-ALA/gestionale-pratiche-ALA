@@ -603,3 +603,32 @@ body.g .item[data-label] :is(input[type=text], input[type=number], input[type=da
 .rail-titolo, .rail-logo em, .rail a[data-vista]:not(.rail-logo) small, .rail .versione { color: #A9C6BF !important; }
 .rail .versione { border-color: #6F9690; }
 .rail-fondo { border-top-color: #4B746E; }
+
+/* ===================================================================================================
+   v3.11 — Mint Sorbet colore principale (lo sfondo resta Cream Linen): barra laterale, riquadri e pannelli
+   in menta; Deep Juniper per pulsanti, testi e voci attive; Caramel Clay come piccolo accento.
+   =================================================================================================== */
+:root {
+  --sabbia: #D6E8DC;   /* riquadri, pannelli, menu della pratica: menta chiaro */
+  --sabbia2: #C3DDCC;
+  --line: #C9DDD0;
+}
+.rail { background: var(--menta); color: var(--nero); }
+.rail::after { background: var(--caramello); }
+.rail-logo { color: var(--nero); }
+.rail-logo strong { color: var(--nero); }
+.rail a[data-vista]:not(.rail-logo), .rail a[data-vista]:not(.rail-logo) .ico { color: var(--nero); }
+.rail a[data-vista]:not(.rail-logo):hover { background: rgba(255, 255, 255, .35); }
+.rail a[data-vista]:not(.rail-logo).active { color: #fff; background: var(--nero); }
+.rail a[data-vista]:not(.rail-logo).active .ico { color: #fff; }
+.rail a[data-vista]:not(.rail-logo).active::before { display: none; }
+.rail-titolo, .rail-logo em, .rail a[data-vista]:not(.rail-logo) small, .rail .versione { color: #4D756E !important; }
+.rail a[data-vista]:not(.rail-logo).active small { color: #CFE5D8 !important; }
+.rail .versione { border-color: #7FA699; }
+.rail-fondo { border-top-color: #9DC4AE; }
+/* campi e righe più chiari dentro i riquadri menta */
+body.g .tab td, .riga-card, body.g .doc-row, body.g .fvg-row { background: #EEF6F1; }
+body.g .doc-row:nth-child(even) { background: #EEF6F1; }
+.tab tr.clic:hover td, .riga-card:hover { background: #F8FBF9; }
+body.g .chip { background: #F4F9F6; }
+body.g .seg { background: var(--sabbia2); }
