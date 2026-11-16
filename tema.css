@@ -649,3 +649,16 @@ body.g .seg { background: var(--sabbia2); }
   --rosa: #CBE6C7;     /* proforma e fatture (Pistachio) */
   --verde: #8FB78F;    /* etichette "Pagato" (Matcha), leggibili anche sul pistacchio */
 }
+
+/* v3.14 — categorie dalla palette Wedding 2027: APE ginepro chiaro, Catasto caramello chiaro, Pratiche sabbia,
+   Proforma e Fatture Mint Sorbet. Riquadri e pannelli un po' più chiari, per staccare dal menta dei proforma. */
+:root {
+  --mod: #8FB1AB;
+  --mod2: #5F8C85;
+  --rosa: #B8D8C4;     /* proforma e fatture (Mint Sorbet) */
+  --azzurro: #C9DCD7;  /* numerazione dei proforma */
+  --giallo: #EBC9A8;   /* "da incassare" (caramello chiaro) */
+  --verde: #8FBBA0;    /* "Pagato" */
+  --sabbia: #E1EEE6;
+  --sabbia2: #CFE3D6;
+}
