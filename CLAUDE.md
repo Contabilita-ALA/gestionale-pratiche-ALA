@@ -34,4 +34,4 @@ Drive simulato in memoria (`window.__driveFinto` = elenco file) e l'accesso Goog
 servendo la cartella con `python3 -m http.server`.
 
 ## Versione
-Etichetta in basso a sinistra in `index.html` (`v3.1 web`): aggiornarla a ogni modifica.
+Etichetta in basso a sinistra in `index.html` (`v3.2 web`): aggiornarla a ogni modifica.

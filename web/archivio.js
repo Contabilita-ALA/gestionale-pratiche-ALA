@@ -61,7 +61,23 @@ export async function verificaRadice(id) {
 // ---------------------------------------------------------------------------
 const cache = new Map();
 const inCorso = new Map();
-function svuotaCache() { cache.clear(); inCorso.clear(); }
+function svuotaCache() { cache.clear(); inCorso.clear(); elencoPratiche.svuota(); fileRegistro.svuota(); numerazione.svuota(); }
+
+// Memoria breve degli elenchi letti da Drive: cambiando schermata non si rilegge tutto ogni volta.
+// Si svuota dopo ogni salvataggio fatto da qui; quello che cambia da un altro PC si vede entro mezzo minuto.
+const DURATA = 30000;
+function ricorda(leggi) {
+  let valore = null, quando = 0;
+  const f = (fresco = false) => {
+    if (fresco || !valore || Date.now() - quando > DURATA) {
+      quando = Date.now();
+      valore = leggi().catch((e) => { valore = null; throw e; });
+    }
+    return valore;
+  };
+  f.svuota = () => { valore = null; };
+  return f;
+}
 
 export const parti = (rel) => String(rel || '').split(/[\\/]+/).map((p) => p.trim()).filter((p) => p && p !== '.');
 
@@ -165,6 +181,7 @@ const dataLocale = (iso) => {
 // Pratiche: 00_GESTIONALE/pratiche/<codice>.json. Ogni pratica ha un numero progressivo (id) per l'interfaccia.
 // ---------------------------------------------------------------------------
 const cartellaPratiche = () => cartella(`${CARTELLA_APP}/pratiche`, { crea: true });
+const elencoPratiche = ricorda(async () => drive.elenca(await cartellaPratiche()));
 
 function riassunto(d = {}) {
   const m = d.immobile || {};
@@ -189,8 +206,8 @@ const riga = (f) => {
 };
 
 export const pratiche = {
-  async elenco() {
-    const file = await drive.elenca(await cartellaPratiche());
+  async elenco(fresco = false) {
+    const file = await elencoPratiche(fresco);
     return file.map(riga).filter((r) => r.id).sort((a, b) => b.modificata_il.localeCompare(a.modificata_il) || b.id - a.id);
   },
   async _trova(id) {
@@ -210,29 +227,37 @@ export const pratiche = {
     return uid ? ((await this.elenco()).find((x) => x.uid === uid)?.id ?? null) : null;
   },
   async create(dati) {
-    const lista = await this.elenco();
+    const lista = await this.elenco(true); // il numero nuovo si calcola sui dati aggiornati
+    elencoPratiche.svuota();
     const n = Math.max(0, ...lista.map((r) => r.id)) + 1;
     const uid = dati?._uid || crypto.randomUUID();
     const props = proprieta({ n, uid, ...riassunto(dati), creata: new Date().toISOString(), pdf: 0 });
     const f = await drive.scrivi({ parentId: await cartellaPratiche(), nome: `${uid}.json`, mime: 'application/json', dati: JSON.stringify(dati, null, 1), props });
+    elencoPratiche.svuota();
     const { _file, ...r } = riga(f);
     return r;
   },
   async update(id, dati) {
     const r = await this._trova(id);
     if (!r) return null;
+    elencoPratiche.svuota();
     const f = await drive.scrivi({ id: r._file, mime: 'application/json', dati: JSON.stringify(dati, null, 1), props: proprieta({ ...riassunto(dati), uid: dati?._uid || r.uid }) });
+    elencoPratiche.svuota();
     const { _file, ...out } = riga(f);
     return out;
   },
   async markPdf(id) {
     const r = await this._trova(id);
+    elencoPratiche.svuota();
     if (r) await drive.aggiorna(r._file, { props: { pdf: String(r.pdf_generati + 1), ultimo_pdf: new Date().toISOString() } });
+    elencoPratiche.svuota();
   },
   async remove(id) {
     const r = await this._trova(id);
     if (!r) return false;
+    elencoPratiche.svuota();
     await drive.cestina(r._file);
+    elencoPratiche.svuota();
     return true;
   },
 };
@@ -286,9 +311,16 @@ const daProps = (f) => {
 };
 
 const cartellaRegistro = () => cartella(`${CARTELLA_PROFORMA}/registro`, { crea: true });
+const fileRegistro = ricorda(async () => drive.elenca(await cartellaRegistro()));
+// numerazione.json sta nella stessa cartella del registro: si trova nello stesso elenco
+const numerazione = ricorda(async () => {
+  const f = (await fileRegistro()).find((x) => x.name === 'numerazione.json');
+  try { return f ? await leggiJson(f.id) : {}; } catch { return {}; }
+});
+const registroCambiato = () => { fileRegistro.svuota(); numerazione.svuota(); };
 
-async function elencoRegistro() {
-  const file = await drive.elenca(await cartellaRegistro());
+async function elencoRegistro(fresco = false) {
+  const file = await fileRegistro(fresco);
   const perId = new Map();
   for (const f of file) {
     if (f.name === 'numerazione.json' || !f.appProperties?.rid) continue;
@@ -301,22 +333,23 @@ async function elencoRegistro() {
 const senzaFile = ({ _file, ...r }) => r;
 
 async function fileNumerazione() {
-  return (await drive.elenca(await cartellaRegistro(), { nome: 'numerazione.json' }))[0] || null;
+  return (await fileRegistro(true)).find((x) => x.name === 'numerazione.json') || null;
 }
 
 export const registro = {
   async elenco() { return (await elencoRegistro()).map(senzaFile); },
   async leggiNumerazione() {
-    const f = await fileNumerazione();
-    try { return f ? await leggiJson(f.id) : {}; } catch { return {}; }
+    return structuredClone(await numerazione());
   },
   async impostaNumerazione(anno, ultimo, grp = 'proforma') {
     const f = await fileNumerazione();
-    const dati = await this.leggiNumerazione();
+    const dati = f ? await leggiJson(f.id).catch(() => ({})) : {};
     const n = Math.max(0, Math.floor(Number(ultimo) || 0));
     if (n) dati[chiaveNum(anno, grp)] = n;
     else delete dati[chiaveNum(anno, grp)];
+    registroCambiato();
     await drive.scrivi({ id: f?.id, parentId: await cartellaRegistro(), nome: 'numerazione.json', mime: 'application/json', dati: JSON.stringify(dati, null, 2) });
+    registroCambiato();
     return dati;
   },
   async prossimo(anno = new Date().getFullYear(), grp = 'proforma', elenco = null) {
@@ -346,14 +379,18 @@ export const registro = {
   async salva(dati) {
     const pf = { ...dati, id: dati.id || crypto.randomUUID(), modificato: new Date().toISOString() };
     if (!pf.creato) pf.creato = pf.modificato;
-    const esistente = (await elencoRegistro()).find((x) => x.id === pf.id);
+    const esistente = (await elencoRegistro(true)).find((x) => x.id === pf.id);
+    registroCambiato();
     await drive.scrivi({ id: esistente?._file, parentId: await cartellaRegistro(), nome: `${pf.id}.json`, mime: 'application/json', dati: JSON.stringify(pf, null, 1), props: propsRegistro(riepilogoDi(pf)) });
+    registroCambiato();
     return pf;
   },
   async elimina(id) {
     const r = (await elencoRegistro()).find((x) => x.id === id);
     if (!r) return false;
+    registroCambiato();
     await drive.cestina(r._file);
+    registroCambiato();
     return true;
   },
   // PDF del proforma: 00_PROFORMA/<anno>/PROFORMA N. … .pdf (lo stesso proforma riesportato sostituisce il vecchio)
