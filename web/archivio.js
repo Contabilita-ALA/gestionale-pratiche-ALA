@@ -20,8 +20,9 @@ const leggiLS = (k, d = '') => { try { return localStorage.getItem(k) ?? d; } ca
 const scriviLS = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, String(v)); } catch {} };
 
 export const impostazioni = {
-  get radice() { return window.DRIVE_FINTO ? (leggiLS('gs.radice') || drive.radice) : leggiLS('gs.radice'); },
-  get nome() { return leggiLS('gs.radiceNome') || (window.DRIVE_FINTO ? 'Il mio Drive/ALA' : ''); },
+  // versione locale: la cartella ALA del computer (impostata nel server, window.LOCALE.radice), id "."
+  get radice() { if (window.LOCALE) return window.LOCALE.radice ? '.' : ''; return window.DRIVE_FINTO ? (leggiLS('gs.radice') || drive.radice) : leggiLS('gs.radice'); },
+  get nome() { if (window.LOCALE) return window.LOCALE.radice || ''; return leggiLS('gs.radiceNome') || (window.DRIVE_FINTO ? 'Il mio Drive/ALA' : ''); },
   get salvaPdf() { return leggiLS('gs.salvaPdf', '1') !== '0'; },
   imposta({ radice, nome, salvaPdf }) {
     if (radice !== undefined) { scriviLS('gs.radice', radice || null); svuotaCache(); }
@@ -61,7 +62,7 @@ export async function verificaRadice(id) {
 // ---------------------------------------------------------------------------
 const cache = new Map();
 const inCorso = new Map();
-function svuotaCache() { cache.clear(); inCorso.clear(); elencoPratiche.svuota(); fileRegistro.svuota(); numerazione.svuota(); }
+export function svuotaCache() { cache.clear(); inCorso.clear(); elencoPratiche.svuota(); fileRegistro.svuota(); numerazione.svuota(); }
 
 // Memoria degli elenchi letti da Drive: cambiando schermata si mostra subito quello che si conosce già.
 // Se l'elenco ha più di 30 secondi si rilegge da Drive "dietro le quinte"; se è cambiato (es. da un altro PC)
@@ -197,7 +198,25 @@ const dataLocale = (iso) => {
 // Pratiche: 00_GESTIONALE/pratiche/<codice>.json. Ogni pratica ha un numero progressivo (id) per l'interfaccia.
 // ---------------------------------------------------------------------------
 const cartellaPratiche = () => cartella(`${CARTELLA_APP}/pratiche`, { crea: true });
-const elencoPratiche = ricorda(async () => drive.elenca(await cartellaPratiche()));
+const elencoPratiche = ricorda(async () => completaPratiche(await drive.elenca(await cartellaPratiche())));
+
+// Schede senza riassunto (es. salvate dalla versione web e lette dalla versione locale, dove il riassunto di Drive
+// non arriva): il riassunto si ricostruisce dal contenuto del file e si salva, così la volta dopo è già pronto.
+async function completaPratiche(file) {
+  const senza = file.filter((f) => !Number(f.appProperties?.n) && /\.json$/i.test(f.name));
+  if (!senza.length) return file;
+  let n = Math.max(0, ...file.map((f) => Number(f.appProperties?.n) || 0));
+  senza.sort((a, b) => String(a.createdTime).localeCompare(String(b.createdTime)));
+  for (const f of senza) {
+    try {
+      const dati = await leggiJson(f.id);
+      n += 1;
+      const props = proprieta({ n, uid: dati?._uid || f.name.replace(/\.json$/i, ''), ...riassunto(dati), creata: f.createdTime, pdf: 0 });
+      Object.assign(f, await drive.aggiorna(f.id, { props }));
+    } catch {}
+  }
+  return file;
+}
 
 function riassunto(d = {}) {
   const m = d.immobile || {};
@@ -327,7 +346,17 @@ const daProps = (f) => {
 };
 
 const cartellaRegistro = () => cartella(`${CARTELLA_PROFORMA}/registro`, { crea: true });
-const fileRegistro = ricorda(async () => drive.elenca(await cartellaRegistro()));
+const fileRegistro = ricorda(async () => completaRegistro(await drive.elenca(await cartellaRegistro())));
+async function completaRegistro(file) {
+  for (const f of file) {
+    if (f.appProperties?.rid || f.name === 'numerazione.json' || !/\.json$/i.test(f.name)) continue;
+    try {
+      const pf = await leggiJson(f.id);
+      Object.assign(f, await drive.aggiorna(f.id, { props: propsRegistro(riepilogoDi({ ...pf, id: pf.id || f.name.replace(/\.json$/i, '') })) }));
+    } catch {}
+  }
+  return file;
+}
 // numerazione.json sta nella stessa cartella del registro: si trova nello stesso elenco
 const numerazione = ricorda(async () => {
   const f = (await fileRegistro()).find((x) => x.name === 'numerazione.json');

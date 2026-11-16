@@ -38,7 +38,7 @@ async function gestisci(url, init) {
     if (typeof corpo === 'string') { try { body = JSON.parse(corpo); } catch { body = corpo; } }
     else body = corpo ?? null;
     // la nuova scheda per "Apri cartella" va aperta subito, durante il clic (dopo verrebbe bloccata)
-    const finestra = percorso === 'api/apri-cartella' ? window.open('about:blank', '_blank') : null;
+    const finestra = percorso === 'api/apri-cartella' && !window.LOCALE ? window.open('about:blank', '_blank') : null;
     const req = { finestra, params: Object.fromEntries(Object.entries(m.groups || {}).map(([k, v]) => [k, decodeURIComponent(v)])), query: Object.fromEntries(u.searchParams), body };
     try {
       return await r.fn(req);
@@ -366,11 +366,25 @@ rotta('DELETE', 'api/pratiche/:id', async ({ params }) => {
 // ---------------------------------------------------------------------------
 // Cartella principale (Google Drive) e cartelle delle pratiche
 // ---------------------------------------------------------------------------
-const descrizioneImpostazioni = () => ({ cartellaArchivio: impostazioni.radice ? impostazioni.nome || 'Google Drive' : '', salvaPdfInArchivio: impostazioni.salvaPdf, suggerimenti: [], web: true });
+const descrizioneImpostazioni = () => (window.LOCALE
+  ? { cartellaArchivio: window.LOCALE.radice || '', salvaPdfInArchivio: impostazioni.salvaPdf, suggerimenti: window.LOCALE.candidati || [], locale: true, linkDrive: window.LOCALE.linkDrive || '' }
+  : { cartellaArchivio: impostazioni.radice ? impostazioni.nome || 'Google Drive' : '', salvaPdfInArchivio: impostazioni.salvaPdf, suggerimenti: [], web: true });
 rotta('GET', 'api/impostazioni', async () => json(descrizioneImpostazioni()));
 rotta('PUT', 'api/impostazioni', async ({ body }) => {
   const testo = String(body?.cartellaArchivio || '').trim();
   const salva = body?.salvaPdfInArchivio !== false;
+  // versione locale: percorso della cartella ALA sul computer (lo controlla e lo ricorda server.cjs)
+  if (window.LOCALE) {
+    impostazioni.imposta({ salvaPdf: salva });
+    if (testo && testo !== window.LOCALE.radice) {
+      const r = await fetch('locale/radice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ percorso: testo }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Errore(400, j.error || 'Cartella non impostata');
+      Object.assign(window.LOCALE, j);
+      A.svuotaCache();
+    }
+    return json(descrizioneImpostazioni());
+  }
   if (!testo) {
     impostazioni.imposta({ radice: '', nome: '', salvaPdf: salva });
     return json(descrizioneImpostazioni());
@@ -407,6 +421,13 @@ rotta('PUT', 'api/studio', async ({ body }) => {
 // altrimenti il browser la bloccherebbe; l'indirizzo arriva appena trovato l'id della cartella.
 rotta('POST', 'api/apri-cartella', async ({ body, finestra }) => {
   if (!impostazioni.radice) throw new Errore(400, 'Cartella principale non impostata');
+  // versione locale: la cartella si apre nel Finder (Mac) o in Esplora file (Windows)
+  if (window.LOCALE) {
+    const percorso = A.parti(body?.cartella || '').join('/') || '.';
+    await A.cartella(percorso === '.' ? '' : percorso, { crea: true });
+    await fetch('locale/apri', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: percorso }) });
+    return json(null, 204);
+  }
   const url = await A.linkCartella(body?.cartella || '');
   if (finestra && !finestra.closed) finestra.location.href = url;
   else window.open(url, '_blank', 'noopener');

@@ -243,10 +243,45 @@ function driveFinto() {
   return api;
 }
 
+// ---------------------------------------------------------------------------
+// Versione locale (server.cjs sul computer): stessi comandi, ma sui file della cartella ALA di Google Drive per
+// desktop. L'id di un file è il suo percorso relativo ("." è la cartella ALA). Niente accesso con Google.
+// ---------------------------------------------------------------------------
+async function chiamaLocale(op, { query, body, dati, meta } = {}) {
+  const url = `locale/fs/${op}${query ? `?${new URLSearchParams(query)}` : ''}`;
+  const opz = dati !== undefined
+    ? { method: 'POST', headers: { 'X-Meta': encodeURIComponent(JSON.stringify(meta || {})) }, body: dati instanceof Blob ? dati : new Blob([dati]) }
+    : body !== undefined ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {};
+  const res = await fetch(url, opz);
+  if (!res.ok) {
+    let msg = `Errore ${res.status}`;
+    try { msg = (await res.json()).error || msg; } catch {}
+    const err = new Error(msg);
+    err.status = res.status;
+    throw err;
+  }
+  return res;
+}
+const locale = {
+  radice: '.',
+  async info(id) { return (await chiamaLocale('info', { query: { id } })).json(); },
+  async elenca(parentId, { soloCartelle = false, nome = null } = {}) {
+    return (await chiamaLocale('elenca', { query: { id: parentId, ...(soloCartelle ? { soloCartelle: '1' } : {}), ...(nome != null ? { nome } : {}) } })).json();
+  },
+  async creaCartella(parentId, nome) { return (await chiamaLocale('cartella', { body: { padre: parentId, nome } })).json(); },
+  async leggi(id) { return (await chiamaLocale('leggi', { query: { id } })).arrayBuffer(); },
+  async scrivi({ id, parentId, nome, dati, props }) {
+    return (await chiamaLocale('scrivi', { dati, meta: { id, padre: parentId, nome, props } })).json();
+  },
+  async aggiorna(id, { nome, props, aggiungi, togli }) { return (await chiamaLocale('aggiorna', { body: { id, nome, props, aggiungi, togli } })).json(); },
+  async cestina(id) { await chiamaLocale('cestina', { body: { id } }); },
+};
+
 let finto;
 export const drive = new Proxy({}, {
   get(_t, k) {
     if (window.DRIVE_FINTO) return (finto ||= driveFinto())[k];
+    if (window.LOCALE) return locale[k];
     return vero[k];
   },
 });

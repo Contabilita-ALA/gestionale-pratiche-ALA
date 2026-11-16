@@ -107,7 +107,72 @@ document.addEventListener('pointerdown', () => {
   if (G.scadeTraPoco() && !ricollegamento) G.accedi().catch(() => {});
 }, true);
 
+// Versione locale (server.cjs sul computer): niente Google, la cartella ALA si sceglie sul disco
+async function statoLocale() {
+  if (window.DRIVE_FINTO) return null;
+  try {
+    const r = await fetch('locale/stato', { cache: 'no-store' });
+    if (!r.ok) return null;
+    const s = await r.json();
+    return s?.locale ? s : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function impostaCartellaLocale(percorso, linkDrive) {
+  const r = await fetch('locale/radice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ percorso, linkDrive }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || 'Cartella non impostata');
+  Object.assign(window.LOCALE, j);
+  return j;
+}
+
+function chiediCartellaLocale(stato) {
+  return new Promise((ok) => {
+    const mac = stato.sistema === 'darwin';
+    const input = el('input', { type: 'text', placeholder: mac ? '/Users/…/Library/CloudStorage/GoogleDrive-…/Il mio Drive/ALA' : 'G:\\Il mio Drive\\ALA', autocomplete: 'off' });
+    const link = el('input', { type: 'text', placeholder: 'Facoltativo: link della cartella ALA su drive.google.com', autocomplete: 'off' });
+    const errore = el('div', { class: 'gs-err' });
+    const btn = el('button', { class: 'gs-btn', type: 'button' }, 'Usa questa cartella');
+    const proposte = (stato.candidati || []).map((c) => el('button', { class: 'gs-btn chiaro', type: 'button', style: 'margin:0 8px 8px 0', onclick: () => { input.value = c; } }, c));
+    const v = velo([
+      el('img', { src: 'assets/logo.png', alt: '' }),
+      el('h1', {}, 'Cartella dello studio'),
+      el('p', {}, proposte.length
+        ? 'Ho trovato la cartella ALA di Google Drive su questo computer: cliccala per sceglierla (o scrivi un altro percorso).'
+        : mac
+          ? 'Scrivi il percorso della cartella ALA. Per trovarlo: nel Finder apri Google Drive → Il mio Drive, tieni premuto il tasto Option, clic destro sulla cartella ALA → "Copia ALA come nome di percorso", poi incollalo qui.'
+          : 'Scrivi il percorso della cartella ALA. Per trovarlo: in Esplora file apri Google Drive (di solito il disco G:) → Il mio Drive, apri la cartella ALA, clic sulla barra dell’indirizzo in alto, copia e incolla qui.'),
+      el('div', {}, ...proposte),
+      input, link, btn, errore,
+      el('p', { class: 'gs-piccolo' }, 'Serve Google Drive per desktop (gratuito): l’app salva tutto nella cartella sul computer e Drive la sincronizza da solo con gli altri computer.'),
+    ]);
+    btn.addEventListener('click', async () => {
+      if (!input.value.trim()) { errore.textContent = 'Scegli o scrivi la cartella'; return; }
+      btn.disabled = true;
+      errore.textContent = '';
+      try {
+        await impostaCartellaLocale(input.value, link.value);
+        v.remove();
+        ok();
+      } catch (err) {
+        errore.textContent = err.message;
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
 async function avvia() {
+  const loc = await statoLocale();
+  if (loc) {
+    window.LOCALE = loc;
+    document.documentElement.classList.add('locale');
+    if (!loc.radice) await chiediCartellaLocale(loc);
+    await import('../app.js');
+    return;
+  }
   if (!G.collegato()) await chiediAccesso();
   if (!impostazioni.radice) await chiediCartella();
   await import('../app.js');

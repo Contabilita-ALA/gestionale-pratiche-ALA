@@ -1070,7 +1070,8 @@ const percorsoBreve = (p) => {
 
 // Una volta impostata, la cartella principale si vede come una riga sola; "Cambia" riapre l'impostazione
 function sezioneCartellaPrincipale() {
-  const input = h('input', { type: 'text', placeholder: 'Link della cartella: https://drive.google.com/drive/folders/…', autocomplete: 'off' });
+  const LOC = Boolean(window.LOCALE);
+  const input = h('input', { type: 'text', placeholder: LOC ? 'Percorso della cartella ALA sul computer (es. G:\\Il mio Drive\\ALA)' : 'Link della cartella: https://drive.google.com/drive/folders/…', autocomplete: 'off' });
   const pdf = h('input', { type: 'checkbox', checked: true });
   const stato = h('div', { class: 'stato' }, 'Caricamento…');
   const suggerimenti = h('div', { class: 'row' });
@@ -1085,7 +1086,7 @@ function sezioneCartellaPrincipale() {
       archivioInCaricamento = Promise.resolve(archivio); // chi la legge dopo vede la cartella appena salvata
       mostra(r);
       aggiornaCalcolati();
-      toast(r.cartellaArchivio ? 'Cartella principale impostata' : 'Copia su Google Drive disattivata');
+      toast(r.cartellaArchivio ? 'Cartella principale impostata' : LOC ? 'Cartella principale non impostata' : 'Copia su Google Drive disattivata');
       // arrivando da "Scegli o crea la cartella…": si torna alla pratica e si apre la scelta della cartella
       if (r.cartellaArchivio && dopoCartellaPrincipale) {
         const poi = dopoCartellaPrincipale;
@@ -1106,15 +1107,16 @@ function sezioneCartellaPrincipale() {
     riga.textContent = percorsoBreve(r.cartellaArchivio);
     riga.title = r.cartellaArchivio || '';
     stato.textContent = r.cartellaArchivio
-      ? `Cartella principale su Google Drive: ${r.cartellaArchivio}`
-      : 'Cartella principale non ancora impostata: incolla qui il link della cartella dello studio su Google Drive.';
+      ? (LOC ? `Cartella principale sul computer: ${r.cartellaArchivio}` : `Cartella principale su Google Drive: ${r.cartellaArchivio}`)
+      : (LOC ? 'Cartella principale non ancora impostata: scrivi il percorso della cartella ALA sul computer.' : 'Cartella principale non ancora impostata: incolla qui il link della cartella dello studio su Google Drive.');
     stato.className = `stato${r.cartellaArchivio ? ' ok' : ' err'}`;
     compatta.hidden = !r.cartellaArchivio;
     editor.hidden = Boolean(r.cartellaArchivio);
   };
   const editor = h('div', { class: 'drive-box' },
-    h('p', { class: 'hint', style: 'margin:0;font-size:13px;color:var(--muted)' },
-      "È la cartella di Google Drive che contiene le cartelle di tutte le pratiche (00_APE, 00_CATASTO, pratiche edilizie): qui l'app salva pratiche, proforma e documenti. Per cambiarla incolla il link della cartella (in Drive: apri la cartella e copia l'indirizzo dalla barra del browser)."),
+    h('p', { class: 'hint', style: 'margin:0;font-size:13px;color:var(--muted)' }, LOC
+      ? "È la cartella ALA di Google Drive per desktop su questo computer, che contiene le cartelle di tutte le pratiche (00_APE, 00_CATASTO, pratiche edilizie): qui l'app salva pratiche, proforma e documenti, e Google Drive li sincronizza con gli altri computer. Per cambiarla scrivi il percorso della cartella."
+      : "È la cartella di Google Drive che contiene le cartelle di tutte le pratiche (00_APE, 00_CATASTO, pratiche edilizie): qui l'app salva pratiche, proforma e documenti. Per cambiarla incolla il link della cartella (in Drive: apri la cartella e copia l'indirizzo dalla barra del browser)."),
     h('div', { class: 'row' }, input, h('button', { type: 'button', class: 'btn', onclick: salva }, 'Salva impostazione')),
     suggerimenti,
     h('label', { class: 'switch' }, pdf, 'Salva nella cartella anche il PDF del sopralluogo esportato'),
@@ -3147,11 +3149,28 @@ function renderOpzioni() {
     ...(avvisoOpzioni ? [h('p', { class: 'opzioni-avviso' }, avvisoOpzioni)] : []),
     h('section', { class: 'pannello opz' }, h('header', {}, h('span', { class: 'mod-icona', html: icona('cartella', 16) }), h('h2', {}, 'Cartella principale delle pratiche')), sezioneCartellaPrincipale()),
     h('section', { class: 'pannello opz' }, h('header', {}, h('span', { class: 'mod-icona', html: icona('salva', 16) }), h('h2', {}, 'Dati dello studio e pagamento')), sezioneStudio()),
-    h('section', { class: 'pannello opz' }, h('header', {}, h('span', { class: 'mod-icona', html: icona('cartella', 16) }), h('h2', {}, 'Account Google')), sezioneAccount()));
+    h('section', { class: 'pannello opz' }, h('header', {}, h('span', { class: 'mod-icona', html: icona('cartella', 16) }), h('h2', {}, window.LOCALE ? 'Google Drive' : 'Account Google')), sezioneAccount()));
 }
 
 // Account Google con cui l'app legge e scrive nel Drive; "Esci" scollega questo browser
 function sezioneAccount() {
+  // versione locale: niente account Google; si può ricordare il link della cartella ALA su drive.google.com
+  if (window.LOCALE) {
+    const link = h('input', { type: 'text', value: window.LOCALE.linkDrive || '', placeholder: 'https://drive.google.com/drive/folders/…', autocomplete: 'off' });
+    const apri = () => window.LOCALE.linkDrive && fetch('locale/apri', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: window.LOCALE.linkDrive }) });
+    return h('div', { class: 'cp' },
+      h('p', { class: 'hint', style: 'margin:0 0 10px;font-size:13px;color:var(--muted)' },
+        'Versione locale: l’app lavora sulla cartella del computer e Google Drive per desktop la sincronizza. Qui puoi incollare il link della cartella ALA su Google Drive, per aprirla nel browser.'),
+      h('div', { class: 'drive-box' }, h('div', { class: 'row' }, link,
+        h('button', { type: 'button', class: 'btn', onclick: async () => {
+          try {
+            const r = await fetch('locale/radice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ linkDrive: link.value }) });
+            Object.assign(window.LOCALE, await r.json());
+            toast('Link salvato');
+          } catch (err) { toast(err.message, true); }
+        } }, 'Salva link'),
+        h('button', { type: 'button', class: 'btn ghost', onclick: apri }, 'Apri su Google Drive'))));
+  }
   const u = Google.utente;
   return h('div', { class: 'cp' },
     h('p', { class: 'hint', style: 'margin:0 0 10px;font-size:13px;color:var(--muted)' }, u?.emailAddress

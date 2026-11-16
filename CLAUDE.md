@@ -1,6 +1,8 @@
 # Note per Claude (contesto del progetto)
 
-App web statica (GitHub Pages, ramo `main`, cartella radice) per lo studio della Dott.ssa Arch. Agnese Lorenzon.
+App per lo studio della Dott.ssa Arch. Agnese Lorenzon. Dalla v4.0 si usa soprattutto **in locale** (Windows e Mac):
+`server.cjs` (solo Node.js, nessuna dipendenza) avviato con doppio clic da `Avvia Gestionale (Windows).bat` /
+`Avvia Gestionale (Mac).command`. La stessa app resta pubblicata come sito statico (GitHub Pages, ramo `main`).
 Interfaccia e testi **in italiano**; commenti nel codice in italiano. L'utente non è una programmatrice: spiegazioni semplici.
 
 ## Vincoli dell'utente
@@ -15,6 +17,23 @@ Interfaccia e testi **in italiano**; commenti nel codice in italiano. L'utente n
   (`--nero` = #355B56, testo `--ink` #22302D); pallino del menu caramello, card dei moduli (v3.14, dalla palette): APE ginepro chiaro #8FB1AB,
   Catasto caramello chiaro #D9A47C, Pratiche sabbia #E2D0B6, Proforma/Fatture Mint Sorbet #B8D8C4; riquadri #E1EEE6 (in `MODULI` di app.js e `:root` di tema.css).
   Icone in `assets/forme` (maschere colorate via CSS). Il PDF "nuovo" ha colori suoi (lib/template.js, `cssNuovo`).
+
+## Versione locale (v4.0)
+- `server.cjs` ascolta su 127.0.0.1:8787 e apre il browser. I file dell'app li prende da GitHub Pages
+  (`REMOTO`, aggiornamenti automatici: una volta per avvio, poi dalla memoria), con copia in `~/.gestionale-studio-cache`
+  e, senza internet, dalla cartella del programma. `SOLO_LOCALE=1` usa solo la cartella del programma (prove),
+  `NON_APRIRE=1` non apre il browser, `PORTA=…` cambia porta.
+- Impostazioni del computer in `~/.gestionale-studio.json` (`radice` = percorso della cartella ALA di Google Drive per
+  desktop, `linkDrive` = link facoltativo della cartella su drive.google.com). Ricerca automatica della cartella: Windows
+  `<lettera>:\Il mio Drive\ALA` (o My Drive), Mac `~/Library/CloudStorage/GoogleDrive-*/Il mio Drive/ALA`.
+- `/locale/stato`, `/locale/radice`, `/locale/apri` (Finder/Esplora file o link nel browser) e `/locale/fs/*`
+  (info, elenca, cartella, leggi, scrivi, aggiorna, cestina): stessi comandi del Drive. L'id di un file è il suo
+  percorso relativo ("." = cartella ALA). Le `appProperties` di Drive diventano un file nascosto `.gestionale.json` in
+  ogni cartella. Scritture sicure (file temporaneo e poi rinomina).
+- Nel browser: `web/avvio.js` prova `locale/stato`; se risponde imposta `window.LOCALE` (niente accesso Google) e
+  `drive` in `web/gdrive.js` usa il driver `locale`. Schede di pratiche e registro senza riassunto (salvate dalla
+  versione web: le appProperties di Drive non arrivano sul disco) vengono completate leggendo il file
+  (`completaPratiche`/`completaRegistro` in `web/archivio.js`).
 
 ## Architettura
 - `index.html` carica `web/avvio.js`: accesso Google (GIS token client, `web/gdrive.js`), scelta cartella, poi `app.js`.
@@ -58,4 +77,5 @@ di 30 s, si rileggono dietro le quinte; se cambiano parte l'evento `archivio-agg
   nelle pagine 1-2 (visita, elenco documenti), grigio chiaro (#F2F2F2) nelle schede dalla pagina 3.
 
 ## Versione
-Etichetta in basso a sinistra in `index.html` (`v3.14 web`): aggiornarla a ogni modifica.
+Etichetta in basso a sinistra in `index.html` (`v4.0`): aggiornarla a ogni modifica. Le modifiche si pubblicano su `main`:
+la versione locale le prende da sola al successivo avvio.
