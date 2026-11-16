@@ -218,15 +218,18 @@ export async function disegnaPagina(ctx, el) {
   const tratto = (stile, w) => (stile === 'dashed' ? [3 * w * k, 2.2 * w * k] : stile === 'dotted' ? [w * k, w * k] : undefined);
 
   // sfondo e bordi
-  function riquadro(st, r, collassato) {
+  // parti: si può disegnare solo lo sfondo o solo il bordo (nei riquadri arrotondati il bordo va disegnato per ultimo,
+  // sopra al contenuto, così le righe grigie e le linee interne non lo coprono)
+  function riquadro(st, r, collassato, { sfondo: conSfondo = true, bordo: conBordo = true } = {}) {
     if (r.w <= 0 || r.h <= 0) return;
     const rr = raggi(st, r);
     const tondo = rr.some((v) => v > 0.3);
-    const sfondo = colore(st.backgroundColor);
+    const sfondo = conSfondo ? colore(st.backgroundColor) : null;
     if (sfondo) {
       if (tondo) pagina.drawSvgPath(percorsoSvg(r, rr), { x: 0, y: H, color: sfondo.c, opacity: sfondo.a, borderWidth: 0 });
       else pagina.drawRectangle({ x: X(r.x), y: Y(r.y + r.h), width: r.w * k, height: r.h * k, color: sfondo.c, opacity: sfondo.a, borderWidth: 0 });
     }
+    if (!conBordo) return;
     const lati = ['Top', 'Right', 'Bottom', 'Left'].map((l) => ({
       w: st[`border${l}Style`] === 'none' || st[`border${l}Style`] === 'hidden' ? 0 : px(st[`border${l}Width`]),
       s: st[`border${l}Style`], c: colore(st[`border${l}Color`]),
@@ -247,10 +250,22 @@ export async function disegnaPagina(ctx, el) {
       if (!(l.w > 0) || !l.c) return;
       pagina.drawLine({ start: { x: X(x1), y: Y(y1) }, end: { x: X(x2), y: Y(y2) }, thickness: l.w * k, color: l.c.c, opacity: l.c.a, dashArray: tratto(l.s, l.w) });
     };
-    linea(t, r.x, r.y + off(t), r.x + r.w, r.y + off(t));
-    linea(b, r.x, r.y + r.h - off(b), r.x + r.w, r.y + r.h - off(b));
-    linea(s, r.x + off(s), r.y, r.x + off(s), r.y + r.h);
-    linea(d, r.x + r.w - off(d), r.y, r.x + r.w - off(d), r.y + r.h);
+    // angoli arrotondati tra due lati con bordo: le linee si accorciano e l'angolo diventa una curva
+    const ha = (l) => l.w > 0 && l.c;
+    const [tl, tr, br, bl] = tondo ? rr : [0, 0, 0, 0];
+    const cTL = ha(t) && ha(s) ? tl : 0, cTR = ha(t) && ha(d) ? tr : 0, cBR = ha(b) && ha(d) ? br : 0, cBL = ha(b) && ha(s) ? bl : 0;
+    linea(t, r.x + cTL, r.y + off(t), r.x + r.w - cTR, r.y + off(t));
+    linea(b, r.x + cBL, r.y + r.h - off(b), r.x + r.w - cBR, r.y + r.h - off(b));
+    linea(s, r.x + off(s), r.y + cTL, r.x + off(s), r.y + r.h - cBL);
+    linea(d, r.x + r.w - off(d), r.y + cTR, r.x + r.w - off(d), r.y + r.h - cBR);
+    const c = 0.5523;
+    const arco = (l, x1, y1, cx1, cy1, cx2, cy2, x2, y2) => pagina.drawSvgPath(
+      `M${X(x1)},${y1 * k} C${X(cx1)},${cy1 * k} ${X(cx2)},${cy2 * k} ${X(x2)},${y2 * k}`,
+      { x: 0, y: H, borderColor: l.c.c, borderOpacity: l.c.a, borderWidth: l.w * k, borderDashArray: tratto(l.s, l.w) });
+    if (cTR) { const o = off(t), q = cTR - o; arco(t, r.x + r.w - cTR, r.y + o, r.x + r.w - cTR + q * c, r.y + o, r.x + r.w - o, r.y + cTR - q * c, r.x + r.w - o, r.y + cTR); }
+    if (cBR) { const o = off(b), q = cBR - o; arco(b, r.x + r.w - o, r.y + r.h - cBR, r.x + r.w - o, r.y + r.h - cBR + q * c, r.x + r.w - cBR + q * c, r.y + r.h - o, r.x + r.w - cBR, r.y + r.h - o); }
+    if (cBL) { const o = off(b), q = cBL - o; arco(b, r.x + cBL, r.y + r.h - o, r.x + cBL - q * c, r.y + r.h - o, r.x + o, r.y + r.h - cBL + q * c, r.x + o, r.y + r.h - cBL); }
+    if (cTL) { const o = off(t), q = cTL - o; arco(t, r.x + o, r.y + cTL, r.x + o, r.y + cTL - q * c, r.x + cTL - q * c, r.y + o, r.x + cTL, r.y + o); }
   }
 
   // casella spuntata: la X è fatta con ::before e ::after (due linee ruotate che vanno da un angolo all'altro)
@@ -415,23 +430,32 @@ export async function disegnaPagina(ctx, el) {
     if (Number(st.opacity) === 0) return;
     const r = rel(e.getBoundingClientRect());
     const collassato = st.borderCollapse === 'collapse' && /^table/.test(st.display);
+    // riquadro arrotondato con overflow nascosto (le card della grafica nuova): il contenuto si ritaglia dentro il bordo
+    const rr = raggi(st, r);
+    const ritaglia = st.overflow !== 'visible' && st.overflowX !== 'visible' && rr.some((v) => v > 0.3);
     if (visibile) {
       if (/inline/.test(st.display) && st.display !== 'inline-block' && st.display !== 'inline-flex' && st.display !== 'inline-grid') {
         for (const cr of e.getClientRects()) riquadro(st, rel(cr), false);
-      } else riquadro(st, r, collassato);
+      } else riquadro(st, r, collassato, { bordo: !ritaglia });
       if (e.classList?.contains('cb') && e.classList.contains('on')) crocetta(e, st, r);
       if (e.tagName === 'IMG') await immagine(e, st, r);
       if (st.display === 'list-item') await segno(e, st);
     }
-    // contenuto ritagliato dai riquadri arrotondati con overflow nascosto
-    const rr = raggi(st, r);
-    const ritaglia = st.overflow !== 'visible' && st.overflowX !== 'visible' && rr.some((v) => v > 0.3);
-    if (ritaglia) pagina.pushOperators(pushGraphicsState(), ...percorsoOp(r, rr), clip(), endPath());
+    // contenuto ritagliato all'interno del bordo, con la curva interna degli angoli (raggio meno spessore del bordo)
+    if (ritaglia) {
+      const bt = px(st.borderTopWidth), bd = px(st.borderRightWidth), bb = px(st.borderBottomWidth), bs = px(st.borderLeftWidth);
+      const dentro = { x: r.x + bs, y: r.y + bt, w: r.w - bs - bd, h: r.h - bt - bb };
+      const rrDentro = [Math.max(0, rr[0] - Math.max(bt, bs)), Math.max(0, rr[1] - Math.max(bt, bd)), Math.max(0, rr[2] - Math.max(bb, bd)), Math.max(0, rr[3] - Math.max(bb, bs))];
+      pagina.pushOperators(pushGraphicsState(), ...percorsoOp(dentro, rrDentro), clip(), endPath());
+    }
     for (const c of e.childNodes) {
       if (c.nodeType === 3) { if (visibile) await testo(c, st); }
       else if (c.nodeType === 1) await nodo(c);
     }
-    if (ritaglia) pagina.pushOperators(popGraphicsState());
+    if (ritaglia) {
+      pagina.pushOperators(popGraphicsState());
+      if (visibile) riquadro(st, r, collassato, { sfondo: false }); // il bordo sopra a tutto
+    }
   }
 
   await nodo(el);

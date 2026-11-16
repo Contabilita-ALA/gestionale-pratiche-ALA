@@ -28,6 +28,8 @@ Interfaccia e testi **in italiano**; commenti nel codice in italiano. L'utente n
   incorporano dalla copia .ttf in `vendor/ttf` (pdf-lib/fontkit si bloccano con i woff2 in subset; i .ttf sono stati
   convertiti con fontTools). Riserva: se il vettoriale fallisce (o con `window.PDF_FOTO = true`) si usa la vecchia "foto"
   delle pagine con html2canvas + testo invisibile. Piè di pagina vettoriale con pdf-lib (documenti.js).
+  Riquadri arrotondati con overflow nascosto: sfondo, poi contenuto ritagliato dentro il bordo (curva interna), poi il
+  bordo sopra a tutto. Bordi diversi per lato con raggio: angoli disegnati come curve.
   Se un modello usa qualcosa di nuovo (gradienti, ombre, ::before con testo…) va aggiunto in vettoriale.js.
 - `lib/`: modelli e logica condivisi (proforma, informativa, catasto, offerta, nomi, importa, allegati, comuni…).
 - OCR documenti d'identità/libretti: tesseract.js nel browser (motore e lingua scaricati da jsDelivr la prima volta).
@@ -54,4 +56,4 @@ di 30 s, si rileggono dietro le quinte; se cambiano parte l'evento `archivio-agg
   nelle pagine 1-2 (visita, elenco documenti), grigio chiaro (#F2F2F2) nelle schede dalla pagina 3.
 
 ## Versione
-Etichetta in basso a sinistra in `index.html` (`v3.8 web`): aggiornarla a ogni modifica.
+Etichetta in basso a sinistra in `index.html` (`v3.9 web`): aggiornarla a ogni modifica.
