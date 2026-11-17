@@ -200,21 +200,36 @@ const dataLocale = (iso) => {
 const cartellaPratiche = () => cartella(`${CARTELLA_APP}/pratiche`, { crea: true });
 const elencoPratiche = ricorda(async () => completaPratiche(await drive.elenca(await cartellaPratiche())));
 
-// Schede senza riassunto (es. salvate dalla versione web e lette dalla versione locale, dove il riassunto di Drive
-// non arriva): il riassunto si ricostruisce dal contenuto del file e si salva, così la volta dopo è già pronto.
+// Riassunti da rifare. Versione locale e versione web salvano gli stessi file (Google Drive per desktop li sincronizza),
+// ma i riassunti per gli elenchi stanno in posti diversi: le appProperties su Drive, il file .gestionale.json sul
+// computer. Ogni riassunto ricorda quando è stato fatto ("agg"): se il file è stato modificato dopo (dall'altra
+// versione), oppure il riassunto manca, si rilegge il file e lo si rifà. Così gli elenchi sono giusti in tutte e due.
+const ORA = () => new Date().toISOString();
+const daRifare = (f) => {
+  const a = f.appProperties || {};
+  return !a.agg || Date.parse(f.modifiedTime) - Date.parse(a.agg) > 120000;
+};
+// esegue fn su tutti gli elementi, al massimo k alla volta (lettura più veloce su Drive)
+async function aGruppi(lista, fn, k = 6) {
+  let i = 0;
+  await Promise.all(Array.from({ length: Math.min(k, lista.length) }, async () => { while (i < lista.length) await fn(lista[i++]); }));
+}
 async function completaPratiche(file) {
-  const senza = file.filter((f) => !Number(f.appProperties?.n) && /\.json$/i.test(f.name));
-  if (!senza.length) return file;
+  const json = file.filter((f) => /\.json$/i.test(f.name));
+  const senzaNumero = json.filter((f) => !Number(f.appProperties?.n)).sort((a, b) => String(a.createdTime).localeCompare(String(b.createdTime)));
+  const vecchi = json.filter((f) => Number(f.appProperties?.n) && daRifare(f));
+  if (!senzaNumero.length && !vecchi.length) return file;
+  // i numeri nuovi si assegnano subito, in ordine di creazione
   let n = Math.max(0, ...file.map((f) => Number(f.appProperties?.n) || 0));
-  senza.sort((a, b) => String(a.createdTime).localeCompare(String(b.createdTime)));
-  for (const f of senza) {
+  const nuovi = new Map(senzaNumero.map((f) => [f, ++n]));
+  await aGruppi([...senzaNumero, ...vecchi], async (f) => {
     try {
       const dati = await leggiJson(f.id);
-      n += 1;
-      const props = proprieta({ n, uid: dati?._uid || f.name.replace(/\.json$/i, ''), ...riassunto(dati), creata: f.createdTime, pdf: 0 });
+      const base = { uid: dati?._uid || f.appProperties?.uid || f.name.replace(/\.json$/i, ''), ...riassunto(dati), agg: ORA() };
+      const props = proprieta(nuovi.has(f) ? { n: nuovi.get(f), ...base, creata: f.createdTime, pdf: 0 } : base);
       Object.assign(f, await drive.aggiorna(f.id, { props }));
     } catch {}
-  }
+  });
   return file;
 }
 
@@ -266,7 +281,7 @@ export const pratiche = {
     elencoPratiche.svuota();
     const n = Math.max(0, ...lista.map((r) => r.id)) + 1;
     const uid = dati?._uid || crypto.randomUUID();
-    const props = proprieta({ n, uid, ...riassunto(dati), creata: new Date().toISOString(), pdf: 0 });
+    const props = proprieta({ n, uid, ...riassunto(dati), creata: new Date().toISOString(), pdf: 0, agg: ORA() });
     const f = await drive.scrivi({ parentId: await cartellaPratiche(), nome: `${uid}.json`, mime: 'application/json', dati: JSON.stringify(dati, null, 1), props });
     elencoPratiche.svuota();
     const { _file, ...r } = riga(f);
@@ -276,7 +291,7 @@ export const pratiche = {
     const r = await this._trova(id);
     if (!r) return null;
     elencoPratiche.svuota();
-    const f = await drive.scrivi({ id: r._file, mime: 'application/json', dati: JSON.stringify(dati, null, 1), props: proprieta({ ...riassunto(dati), uid: dati?._uid || r.uid }) });
+    const f = await drive.scrivi({ id: r._file, mime: 'application/json', dati: JSON.stringify(dati, null, 1), props: proprieta({ ...riassunto(dati), uid: dati?._uid || r.uid, agg: ORA() }) });
     elencoPratiche.svuota();
     const { _file, ...out } = riga(f);
     return out;
@@ -284,7 +299,7 @@ export const pratiche = {
   async markPdf(id) {
     const r = await this._trova(id);
     elencoPratiche.svuota();
-    if (r) await drive.aggiorna(r._file, { props: { pdf: String(r.pdf_generati + 1), ultimo_pdf: new Date().toISOString() } });
+    if (r) await drive.aggiorna(r._file, { props: { pdf: String(r.pdf_generati + 1), ultimo_pdf: new Date().toISOString(), agg: ORA() } });
     elencoPratiche.svuota();
   },
   async remove(id) {
@@ -335,7 +350,7 @@ const riepilogoDi = (pf) => ({
   totale: totaleDi(pf), modificato: pf.modificato || '', fattura_id: pf.fattura_id || '', proforma_id: pf.proforma_id || '',
 });
 // riepilogo → appProperties e ritorno
-const propsRegistro = (r) => proprieta({ rid: r.id, tipo: r.tipo, numero: r.numero, data: r.data, stato: r.stato, modulo: r.modulo, puid: r.pratica_uid, cliente: r.cliente, descr: r.descrizione, totale: r.totale, fid: r.fattura_id, pid: r.proforma_id, mod: r.modificato });
+const propsRegistro = (r) => proprieta({ rid: r.id, tipo: r.tipo, numero: r.numero, data: r.data, stato: r.stato, modulo: r.modulo, puid: r.pratica_uid, cliente: r.cliente, descr: r.descrizione, totale: r.totale, fid: r.fattura_id, pid: r.proforma_id, mod: r.modificato, agg: ORA() });
 const daProps = (f) => {
   const a = f.appProperties || {};
   return {
@@ -348,13 +363,13 @@ const daProps = (f) => {
 const cartellaRegistro = () => cartella(`${CARTELLA_PROFORMA}/registro`, { crea: true });
 const fileRegistro = ricorda(async () => completaRegistro(await drive.elenca(await cartellaRegistro())));
 async function completaRegistro(file) {
-  for (const f of file) {
-    if (f.appProperties?.rid || f.name === 'numerazione.json' || !/\.json$/i.test(f.name)) continue;
+  const daLeggere = file.filter((f) => f.name !== 'numerazione.json' && /\.json$/i.test(f.name) && (!f.appProperties?.rid || daRifare(f)));
+  await aGruppi(daLeggere, async (f) => {
     try {
       const pf = await leggiJson(f.id);
       Object.assign(f, await drive.aggiorna(f.id, { props: propsRegistro(riepilogoDi({ ...pf, id: pf.id || f.name.replace(/\.json$/i, '') })) }));
     } catch {}
-  }
+  });
   return file;
 }
 // numerazione.json sta nella stessa cartella del registro: si trova nello stesso elenco

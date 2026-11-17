@@ -34,7 +34,9 @@ Interfaccia e testi **in italiano**; commenti nel codice in italiano. L'utente n
 - Nel browser: `web/avvio.js` prova `locale/stato`; se risponde imposta `window.LOCALE` (niente accesso Google) e
   `drive` in `web/gdrive.js` usa il driver `locale`. Schede di pratiche e registro senza riassunto (salvate dalla
   versione web: le appProperties di Drive non arrivano sul disco) vengono completate leggendo il file
-  (`completaPratiche`/`completaRegistro` in `web/archivio.js`).
+  (`completaPratiche`/`completaRegistro` in `web/archivio.js`). Ogni riassunto ha `agg` (quando è stato fatto): se il
+  file è più recente di 2 minuti (modificato dall'altra versione e sincronizzato da Drive) il riassunto si rifà, tenendo
+  il numero della pratica. Uso previsto (v4.1): locale tutti i giorni, versione web solo come riserva su computer altrui.
 
 ## Architettura
 - `index.html` carica `web/avvio.js`: accesso Google (GIS token client, `web/gdrive.js`), scelta cartella, poi `app.js`.
@@ -78,5 +80,5 @@ di 30 s, si rileggono dietro le quinte; se cambiano parte l'evento `archivio-agg
   nelle pagine 1-2 (visita, elenco documenti), grigio chiaro (#F2F2F2) nelle schede dalla pagina 3.
 
 ## Versione
-Etichetta in basso a sinistra in `index.html` (`v4.0.1`): aggiornarla a ogni modifica. Le modifiche si pubblicano su `main`:
+Etichetta in basso a sinistra in `index.html` (`v4.1`): aggiornarla a ogni modifica. Le modifiche si pubblicano su `main`:
 la versione locale le prende da sola al successivo avvio.
