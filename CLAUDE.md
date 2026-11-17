@@ -19,6 +19,7 @@ Interfaccia e testi **in italiano**; commenti nel codice in italiano. L'utente n
   Icone in `assets/forme` (maschere colorate via CSS). Il PDF "nuovo" ha colori suoi (lib/template.js, `cssNuovo`).
 
 ## Versione locale (v4.0)
+- Nel file .bat niente parentesi nei messaggi (Windows le scambia per la fine di un blocco e la finestra si chiude).
 - `server.cjs` ascolta su 127.0.0.1:8787 e apre il browser. I file dell'app li prende da GitHub Pages
   (`REMOTO`, aggiornamenti automatici: una volta per avvio, poi dalla memoria), con copia in `~/.gestionale-studio-cache`
   e, senza internet, dalla cartella del programma. `SOLO_LOCALE=1` usa solo la cartella del programma (prove),
@@ -77,5 +78,5 @@ di 30 s, si rileggono dietro le quinte; se cambiano parte l'evento `archivio-agg
   nelle pagine 1-2 (visita, elenco documenti), grigio chiaro (#F2F2F2) nelle schede dalla pagina 3.
 
 ## Versione
-Etichetta in basso a sinistra in `index.html` (`v4.0`): aggiornarla a ogni modifica. Le modifiche si pubblicano su `main`:
+Etichetta in basso a sinistra in `index.html` (`v4.0.1`): aggiornarla a ogni modifica. Le modifiche si pubblicano su `main`:
 la versione locale le prende da sola al successivo avvio.
